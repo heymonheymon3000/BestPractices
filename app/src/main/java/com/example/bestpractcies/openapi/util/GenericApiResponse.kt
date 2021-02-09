@@ -3,6 +3,16 @@ package com.example.bestpractcies.openapi.util
 import retrofit2.Response
 import timber.log.Timber
 
+
+/**
+ * separate class for HTTP 204 responses so that we can make ApiSuccessResponse's body non-null.
+ */
+class ApiEmptyResponse<T>() : GenericApiResponse<T>()
+
+data class ApiSuccessResponse<T>(val body: T) : GenericApiResponse<T>() {}
+
+data class ApiErrorResponse<T>(val errorMessage: String) : GenericApiResponse<T>()
+
 /**
  * Copied from Architecture components google sample:
  * https://github.com/googlesamples/android-architecture-components/blob/master/GithubBrowserSample/app/src/main/java/com/android/example/github/api/ApiResponse.kt
@@ -48,12 +58,3 @@ sealed class GenericApiResponse<T> {
         }
     }
 }
-
-/**
- * separate class for HTTP 204 responses so that we can make ApiSuccessResponse's body non-null.
- */
-class ApiEmptyResponse<T>() : GenericApiResponse<T>()
-
-data class ApiSuccessResponse<T>(val body: T) : GenericApiResponse<T>() {}
-
-data class ApiErrorResponse<T>(val errorMessage: String) : GenericApiResponse<T>()

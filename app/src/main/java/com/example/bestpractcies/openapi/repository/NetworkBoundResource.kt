@@ -25,7 +25,7 @@ abstract class NetworkBoundResource<ResponseObject, CacheObject, ViewStateType>(
 ){
     protected val result = MediatorLiveData<DataState<ViewStateType>>()
     protected lateinit var job: CompletableJob
-    protected lateinit var coroutineScope: CoroutineScope
+    private lateinit var coroutineScope: CoroutineScope
 
     init {
         setJob(initNewJob())
@@ -61,7 +61,7 @@ abstract class NetworkBoundResource<ResponseObject, CacheObject, ViewStateType>(
         }
     }
 
-    fun doCacheRequest(){
+    private fun doCacheRequest(){
         coroutineScope.launch {
             delay(TESTING_CACHE_DELAY)
             // View data from cache only and return
@@ -104,12 +104,14 @@ abstract class NetworkBoundResource<ResponseObject, CacheObject, ViewStateType>(
             is ApiSuccessResponse ->{
                 handleApiSuccessResponse(response)
             }
+
             is ApiErrorResponse ->{
                 Timber.e("NetworkBoundResource: ${response.errorMessage}" )
                 onErrorReturn(response.errorMessage,
                     shouldUseDialog = true,
                     shouldUseToast = false)
             }
+
             is ApiEmptyResponse ->{
                 Timber.e("NetworkBoundResource: Request returned NOTHING (HTTP 204)" )
                 onErrorReturn("HTTP 204. Returned nothing.",
@@ -161,8 +163,10 @@ abstract class NetworkBoundResource<ResponseObject, CacheObject, ViewStateType>(
     private fun initNewJob(): Job {
         Timber.d("initNewJob: called...")
         job = Job()
-        job.invokeOnCompletion(onCancelling = true, invokeImmediately = true, handler = object : CompletionHandler{
-
+        job.invokeOnCompletion(
+                onCancelling = true,
+                invokeImmediately = true,
+                handler = object : CompletionHandler{
             override fun invoke(cause: Throwable?) {
                 if(job.isCancelled){
                     Timber.e("NetworkBoundResource: Job has been cancelled." )
