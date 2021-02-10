@@ -4,12 +4,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
-import com.example.bestpractcies.openapi.ui.auth.state.AuthStateEvent
 
 abstract class BaseViewModel<StateEvent, ViewState> : ViewModel() {
     protected val _stateEvent: MutableLiveData<StateEvent> = MutableLiveData()
     protected val _viewState: MutableLiveData<ViewState> = MutableLiveData()
-    protected val _isConnectedToInternet: MutableLiveData<Boolean> = MutableLiveData()
+    private val _isConnectedToInternet: MutableLiveData<Boolean> = MutableLiveData()
 
     val viewState: LiveData<ViewState>
         get() = _viewState

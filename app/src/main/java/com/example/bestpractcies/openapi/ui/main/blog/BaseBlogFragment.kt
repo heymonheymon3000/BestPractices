@@ -4,26 +4,38 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import com.example.bestpractcies.R
 import com.example.bestpractcies.openapi.ui.DataStateChangeListener
+import com.example.bestpractcies.openapi.viewModels.ViewModelProviderFactory
 import dagger.android.support.DaggerFragment
 import timber.log.Timber
+import javax.inject.Inject
 
 abstract class BaseBlogFragment : DaggerFragment(){
      lateinit var stateChangeListener: DataStateChangeListener
+
+    @Inject
+    lateinit var providerFactory: ViewModelProviderFactory
+
+    lateinit var viewModel: BlogViewModel
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupActionBarWithNavController(R.id.blogFragment, activity as AppCompatActivity)
 
+        viewModel = activity?.run {
+            ViewModelProvider(this, providerFactory).get(BlogViewModel::class.java)
+        }?: throw Exception("Invalid Activity")
+
         cancelActiveJobs()
     }
 
     fun cancelActiveJobs(){
-//        viewModel.cancelActiveJobs()
+        viewModel.cancelActiveJobs()
     }
 
     /*
