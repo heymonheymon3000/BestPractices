@@ -1,16 +1,22 @@
 package com.example.bestpractcies.openapi.ui.main.blog
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
+import androidx.core.net.toUri
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.example.bestpractcies.R
 import com.example.bestpractcies.openapi.models.main.blog.BlogPost
+import com.example.bestpractcies.openapi.ui.AreYouSureCallback
+import com.example.bestpractcies.openapi.ui.UIMessage
+import com.example.bestpractcies.openapi.ui.UIMessageType
 import com.example.bestpractcies.openapi.ui.main.blog.state.BlogStateEvent.*
-import com.example.bestpractcies.openapi.ui.main.blog.viewmodel.isAuthorOfBlogPost
-import com.example.bestpractcies.openapi.ui.main.blog.viewmodel.setIsAuthorOfBlogPost
+import com.example.bestpractcies.openapi.ui.main.blog.viewmodel.*
 import com.example.bestpractcies.openapi.util.DateUtils
+import com.example.bestpractcies.openapi.util.SuccessHandling.Companion.SUCCESS_BLOG_DELETED
 import kotlinx.android.synthetic.main.fragment_view_blog.*
+import timber.log.Timber
 
 class ViewBlogFragment : BaseBlogFragment(){
     override fun onCreateView(
@@ -27,9 +33,36 @@ class ViewBlogFragment : BaseBlogFragment(){
         subscribeObservers()
         checkIsAuthorOfBlogPost()
         stateChangeListener.expandAppBar()
+
+        delete_button.setOnClickListener {
+            confirmDeleteRequest()
+        }
     }
 
-    fun checkIsAuthorOfBlogPost(){
+    fun confirmDeleteRequest(){
+        val callback: AreYouSureCallback = object: AreYouSureCallback {
+            override fun proceed() {
+                deleteBlogPost()
+            }
+            override fun cancel() {
+                // ignore
+            }
+        }
+
+        uiCommunicationListener.onUIMessageReceived(
+            UIMessage(
+                    getString(R.string.are_you_sure_delete),
+                    UIMessageType.AreYouSureDialog(callback)
+            )
+        )
+    }
+
+    fun deleteBlogPost(){
+        viewModel.setStateEvent(
+                DeleteBlogPostEvent()
+        )
+    }
+    private fun checkIsAuthorOfBlogPost(){
         viewModel.setIsAuthorOfBlogPost(false) // reset
         viewModel.setStateEvent(CheckAuthorOfBlogPost())
     }
@@ -42,6 +75,13 @@ class ViewBlogFragment : BaseBlogFragment(){
                     viewModel.setIsAuthorOfBlogPost(
                             viewState.viewBlogFields.isAuthorOfBlogPost
                     )
+                }
+
+                data.response?.peekContent()?.let{ response ->
+                    if(response.message.equals(SUCCESS_BLOG_DELETED)){
+                        viewModel.removeDeletedBlogPost()
+                        findNavController().popBackStack()
+                    }
                 }
             }
         })
@@ -95,6 +135,17 @@ class ViewBlogFragment : BaseBlogFragment(){
     }
 
     private fun navUpdateBlogFragment(){
-        findNavController().navigate(R.id.action_viewBlogFragment_to_updateBlogFragment)
+        try{
+            // prep for next fragment
+            viewModel.setUpdatedBlogFields(
+                    viewModel.getBlogPost().title,
+                    viewModel.getBlogPost().body,
+                    viewModel.getBlogPost().image.toUri()
+            )
+            findNavController().navigate(R.id.action_viewBlogFragment_to_updateBlogFragment)
+        }catch (e: Exception){
+            // send error report or something. These fields should never be null. Not possible
+            Timber.e("Exception: ${e.message}")
+        }
     }
 }

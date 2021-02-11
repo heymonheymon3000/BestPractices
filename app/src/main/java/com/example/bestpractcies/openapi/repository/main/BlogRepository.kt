@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.switchMap
 import com.example.bestpractcies.openapi.api.GenericResponse
 import com.example.bestpractcies.openapi.api.main.OpenApiMainService
+import com.example.bestpractcies.openapi.api.main.network.responses.BlogCreateUpdateResponse
 import com.example.bestpractcies.openapi.api.main.network.responses.BlogListSearchResponse
 import com.example.bestpractcies.openapi.models.auth.AuthToken
 import com.example.bestpractcies.openapi.models.main.blog.BlogPost
@@ -15,6 +16,8 @@ import com.example.bestpractcies.openapi.repository.JobManager
 import com.example.bestpractcies.openapi.repository.NetworkBoundResource
 import com.example.bestpractcies.openapi.session.SessionManager
 import com.example.bestpractcies.openapi.ui.DataState
+import com.example.bestpractcies.openapi.ui.Response
+import com.example.bestpractcies.openapi.ui.ResponseType
 import com.example.bestpractcies.openapi.ui.main.blog.state.BlogViewState
 import com.example.bestpractcies.openapi.ui.main.blog.state.BlogViewState.*
 import com.example.bestpractcies.openapi.util.AbsentLiveData
@@ -25,7 +28,10 @@ import com.example.bestpractcies.openapi.util.ErrorHandling.Companion.ERROR_UNKN
 import com.example.bestpractcies.openapi.util.GenericApiResponse
 import com.example.bestpractcies.openapi.util.SuccessHandling.Companion.RESPONSE_HAS_PERMISSION_TO_EDIT
 import com.example.bestpractcies.openapi.util.SuccessHandling.Companion.RESPONSE_NO_PERMISSION_TO_EDIT
+import com.example.bestpractcies.openapi.util.SuccessHandling.Companion.SUCCESS_BLOG_DELETED
 import kotlinx.coroutines.*
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -236,6 +242,155 @@ constructor(
                 addJob("isAuthorOfBlogPost", job)
             }
 
+
+        }.asLiveData()
+
+    }
+
+    @InternalCoroutinesApi
+    fun deleteBlogPost(
+            authToken: AuthToken,
+            blogPost: BlogPost
+    ): LiveData<DataState<BlogViewState>>{
+        return object: NetworkBoundResource<GenericResponse, BlogPost, BlogViewState>(
+                sessionManager.isConnectedToTheInternet(),
+                true,
+                true,
+                false
+        ){
+
+            // not applicable
+            override suspend fun createCacheRequestAndReturn() {
+
+            }
+
+            override suspend fun handleApiSuccessResponse(response: ApiSuccessResponse<GenericResponse>) {
+
+                if(response.body.response == SUCCESS_BLOG_DELETED){
+                    updateLocalDb(blogPost)
+                }
+                else{
+                    onCompleteJob(
+                            DataState.error(
+                                    Response(
+                                            ERROR_UNKNOWN,
+                                            ResponseType.Dialog()
+                                    )
+                            )
+                    )
+                }
+            }
+
+            // not applicable
+            override fun loadFromCache(): LiveData<BlogViewState> {
+                return AbsentLiveData.create()
+            }
+
+            override fun createCall(): LiveData<GenericApiResponse<GenericResponse>> {
+                return openApiMainService.deleteBlogPost(
+                        "Token ${authToken.token!!}",
+                        blogPost.slug
+                )
+            }
+
+            override suspend fun updateLocalDb(cacheObject: BlogPost?) {
+                cacheObject?.let{blogPost ->
+                    blogPostDao.deleteBlogPost(blogPost)
+                    onCompleteJob(
+                            DataState.data(
+                                    null,
+                                    Response(SUCCESS_BLOG_DELETED, ResponseType.Toast())
+                            )
+                    )
+                }
+            }
+
+            override fun setJob(job: Job) {
+                addJob("deleteBlogPost", job)
+            }
+
+        }.asLiveData()
+    }
+
+    @InternalCoroutinesApi
+    fun updateBlogPost(
+            authToken: AuthToken,
+            slug: String,
+            title: RequestBody,
+            body: RequestBody,
+            image: MultipartBody.Part?
+    ): LiveData<DataState<BlogViewState>> {
+        return object: NetworkBoundResource<BlogCreateUpdateResponse, BlogPost, BlogViewState>(
+                sessionManager.isConnectedToTheInternet(),
+                true,
+                true,
+                false
+        ){
+
+            // not applicable
+            override suspend fun createCacheRequestAndReturn() {
+
+            }
+
+            override suspend fun handleApiSuccessResponse(
+                    response: ApiSuccessResponse<BlogCreateUpdateResponse>
+            ) {
+
+                val updatedBlogPost = BlogPost(
+                        response.body.pk,
+                        response.body.title,
+                        response.body.slug,
+                        response.body.body,
+                        response.body.image,
+                        DateUtils.convertServerStringDateToLong(response.body.date_updated),
+                        response.body.username
+                )
+
+                updateLocalDb(updatedBlogPost)
+
+                withContext(Dispatchers.Main){
+                    // finish with success response
+                    onCompleteJob(
+                            DataState.data(
+                                    BlogViewState(
+                                            viewBlogFields = ViewBlogFields(
+                                                    blogPost = updatedBlogPost
+                                            )
+                                    ),
+                                    Response(response.body.response, ResponseType.Toast())
+                            ))
+                }
+            }
+
+            // not applicable
+            override fun loadFromCache(): LiveData<BlogViewState> {
+                return AbsentLiveData.create()
+            }
+
+            override fun createCall(): LiveData<GenericApiResponse<BlogCreateUpdateResponse>> {
+                return openApiMainService.updateBlog(
+                        "Token ${authToken.token!!}",
+                        slug,
+                        title,
+                        body,
+                        image
+                )
+            }
+
+            override suspend fun updateLocalDb(cacheObject: BlogPost?) {
+                cacheObject?.let{blogPost ->
+                    blogPostDao.updateBlogPost(
+                            blogPost.pk,
+                            blogPost.title,
+                            blogPost.body,
+                            blogPost.image
+                    )
+                }
+            }
+
+            override fun setJob(job: Job) {
+                addJob("updateBlogPost", job)
+            }
 
         }.asLiveData()
     }

@@ -1,5 +1,8 @@
 package com.example.bestpractcies.openapi.ui.main.blog.viewmodel
 
+import android.net.Uri
+import com.example.bestpractcies.openapi.models.main.blog.BlogPost
+
 fun BlogViewModel.getFilter(): String {
     getCurrentViewStateOrNew().let {
         return it.blogFields.filter
@@ -49,4 +52,25 @@ fun BlogViewModel.isAuthorOfBlogPost(): Boolean{
     getCurrentViewStateOrNew().let {
         return it.viewBlogFields.isAuthorOfBlogPost
     }
+}
+
+fun BlogViewModel.getBlogPost(): BlogPost {
+    getCurrentViewStateOrNew().let { blogViewState ->
+        return blogViewState.viewBlogFields.blogPost?.let {
+            return it
+        }?: getDummyBlogPost()
+    }
+}
+
+fun BlogViewModel.getDummyBlogPost(): BlogPost{
+    return BlogPost(-1, "" , "", "", "", 1, "")
+}
+
+fun BlogViewModel.getUpdatedBlogUri(): Uri? {
+    getCurrentViewStateOrNew().let { blogViewState ->
+        blogViewState.updatedBlogFields.updatedImageUri?.let {
+            return it
+        }
+    }
+    return null
 }

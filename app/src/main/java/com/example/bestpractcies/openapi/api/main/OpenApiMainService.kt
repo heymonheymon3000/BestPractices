@@ -2,9 +2,12 @@ package com.example.bestpractcies.openapi.api.main
 
 import androidx.lifecycle.LiveData
 import com.example.bestpractcies.openapi.api.GenericResponse
+import com.example.bestpractcies.openapi.api.main.network.responses.BlogCreateUpdateResponse
 import com.example.bestpractcies.openapi.api.main.network.responses.BlogListSearchResponse
 import com.example.bestpractcies.openapi.models.auth.AccountProperties
 import com.example.bestpractcies.openapi.util.GenericApiResponse
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.http.*
 
 interface OpenApiMainService {
@@ -43,4 +46,19 @@ interface OpenApiMainService {
             @Header("Authorization") authorization: String,
             @Path("slug") slug: String
     ): LiveData<GenericApiResponse<GenericResponse>>
+
+    @DELETE("blog/{slug}/delete")
+    fun deleteBlogPost(
+            @Header("Authorization") authorization: String,
+            @Path("slug") slug: String
+    ): LiveData<GenericApiResponse<GenericResponse>>
+    @Multipart
+    @PUT("blog/{slug}/update")
+    fun updateBlog(
+            @Header("Authorization") authorization: String,
+            @Path("slug") slug: String,
+            @Part("title") title: RequestBody,
+            @Part("body") body: RequestBody,
+            @Part image: MultipartBody.Part?
+    ): LiveData<GenericApiResponse<BlogCreateUpdateResponse>>
 }

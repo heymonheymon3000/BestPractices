@@ -2,6 +2,7 @@ package com.example.bestpractcies.openapi.ui.main.blog
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -11,6 +12,7 @@ import androidx.navigation.ui.NavigationUI
 import com.bumptech.glide.RequestManager
 import com.example.bestpractcies.R
 import com.example.bestpractcies.openapi.ui.DataStateChangeListener
+import com.example.bestpractcies.openapi.ui.UICommunicationListener
 import com.example.bestpractcies.openapi.ui.main.blog.viewmodel.BlogViewModel
 import com.example.bestpractcies.openapi.viewModels.ViewModelProviderFactory
 import dagger.android.support.DaggerFragment
@@ -27,6 +29,8 @@ abstract class BaseBlogFragment : DaggerFragment(){
     lateinit var requestManager: RequestManager
 
     lateinit var viewModel: BlogViewModel
+
+    lateinit var uiCommunicationListener: UICommunicationListener
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -62,5 +66,14 @@ abstract class BaseBlogFragment : DaggerFragment(){
         }catch(e: ClassCastException){
             Timber.e("$context must implement DataStateChangeListener" )
         }
+
+        try{
+            uiCommunicationListener = context as UICommunicationListener
+        }catch(e: ClassCastException){
+            Timber.e("$context must implement UICommunicationListener" )
+        }
+
     }
+
+
 }

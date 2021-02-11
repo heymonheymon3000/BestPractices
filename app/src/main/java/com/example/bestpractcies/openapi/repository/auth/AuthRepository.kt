@@ -244,6 +244,12 @@ constructor(
                                 authTokenDao.searchByPk(accountProperties.pk).let { authToken ->
                                     if(authToken != null){
                                         if(authToken.token != null){
+
+                                            Timber.e("*********************")
+                                            Timber.e("AuthToken: $authToken")
+                                            Timber.e("*********************")
+
+
                                             onCompleteJob(
                                                 DataState.data(
                                                     AuthViewState(authToken = authToken)

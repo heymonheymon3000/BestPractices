@@ -92,10 +92,16 @@ class BlogFragment : BaseBlogFragment(),
             Timber.d("BlogFragment, ViewState: $viewState")
 
             if(viewState != null){
-                recyclerAdapter.submitList(
-                        blogList = viewState.blogFields.blogList,
-                        isQueryExhausted = viewState.blogFields.isQueryExhausted
-                )
+                recyclerAdapter.apply {
+                    preloadGlideImages(
+                            requestManager,
+                            viewState.blogFields.blogList
+                    )
+                    submitList(
+                            blogList = viewState.blogFields.blogList,
+                            isQueryExhausted = viewState.blogFields.isQueryExhausted
+                    )
+                }
             }
         })
     }
@@ -223,7 +229,7 @@ class BlogFragment : BaseBlogFragment(),
         swipe_refresh.isRefreshing = false
     }
 
-    fun showFilterDialog(){
+    private fun showFilterDialog(){
 
         activity?.let {
             val dialog = MaterialDialog(it)

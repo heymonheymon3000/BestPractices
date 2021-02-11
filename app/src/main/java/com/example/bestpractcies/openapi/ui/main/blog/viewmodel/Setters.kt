@@ -1,5 +1,6 @@
 package com.example.bestpractcies.openapi.ui.main.blog.viewmodel
 
+import android.net.Uri
 import com.example.bestpractcies.openapi.models.main.blog.BlogPost
 
 fun BlogViewModel.setBlogPost(blogPost: BlogPost){
@@ -53,4 +54,51 @@ fun BlogViewModel.setBlogOrder(order: String){
     val update = getCurrentViewStateOrNew()
     update.blogFields.order = order
     setViewState(update)
+}
+
+fun BlogViewModel.removeDeletedBlogPost(){
+    val update = getCurrentViewStateOrNew()
+    val list = update.blogFields.blogList.toMutableList()
+    for(i in 0 until list.size){
+        if(list[i] == getBlogPost()){
+            list.remove(getBlogPost())
+            break
+        }
+    }
+    setBlogListData(list)
+//    setViewState(update)
+}
+
+fun BlogViewModel.setUpdatedBlogFields(title: String?, body: String?, uri: Uri?){
+    val update = getCurrentViewStateOrNew()
+    val updatedBlogFields = update.updatedBlogFields
+    title?.let{ updatedBlogFields.updatedBlogTitle = it }
+    body?.let{ updatedBlogFields.updatedBlogBody = it }
+    uri?.let{ updatedBlogFields.updatedImageUri = it }
+    update.updatedBlogFields = updatedBlogFields
+    setViewState(update)
+}
+
+fun BlogViewModel.updateListItem(newBlogPost: BlogPost){
+    val update = getCurrentViewStateOrNew()
+    val list = update.blogFields.blogList.toMutableList()
+    for(i in 0 until list.size){
+        if(list[i].pk == newBlogPost.pk){
+            list[i] = newBlogPost
+            break
+        }
+    }
+    update.blogFields.blogList = list
+    setViewState(update)
+}
+
+
+fun BlogViewModel.onBlogPostUpdateSuccess(blogPost: BlogPost){
+    setUpdatedBlogFields(
+            uri = null,
+            title = blogPost.title,
+            body = blogPost.body
+    ) // update UpdateBlogFragment (not really necessary since navigating back)
+    setBlogPost(blogPost) // update ViewBlogFragment
+    updateListItem(blogPost) // update BlogFragment
 }
