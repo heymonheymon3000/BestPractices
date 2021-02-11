@@ -1,21 +1,30 @@
 package com.example.bestpractcies.openapi.repository.main
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.switchMap
+import com.example.bestpractcies.openapi.api.GenericResponse
 import com.example.bestpractcies.openapi.api.main.OpenApiMainService
 import com.example.bestpractcies.openapi.api.main.network.responses.BlogListSearchResponse
 import com.example.bestpractcies.openapi.models.auth.AuthToken
 import com.example.bestpractcies.openapi.models.main.blog.BlogPost
 import com.example.bestpractcies.openapi.persistence.main.BlogPostDao
+import com.example.bestpractcies.openapi.persistence.returnOrderedBlogQuery
 import com.example.bestpractcies.openapi.repository.JobManager
 import com.example.bestpractcies.openapi.repository.NetworkBoundResource
 import com.example.bestpractcies.openapi.session.SessionManager
 import com.example.bestpractcies.openapi.ui.DataState
 import com.example.bestpractcies.openapi.ui.main.blog.state.BlogViewState
+import com.example.bestpractcies.openapi.ui.main.blog.state.BlogViewState.*
+import com.example.bestpractcies.openapi.util.AbsentLiveData
 import com.example.bestpractcies.openapi.util.ApiSuccessResponse
+import com.example.bestpractcies.openapi.util.Constants.Companion.PAGINATION_PAGE_SIZE
 import com.example.bestpractcies.openapi.util.DateUtils
+import com.example.bestpractcies.openapi.util.ErrorHandling.Companion.ERROR_UNKNOWN
 import com.example.bestpractcies.openapi.util.GenericApiResponse
+import com.example.bestpractcies.openapi.util.SuccessHandling.Companion.RESPONSE_HAS_PERMISSION_TO_EDIT
+import com.example.bestpractcies.openapi.util.SuccessHandling.Companion.RESPONSE_NO_PERMISSION_TO_EDIT
 import kotlinx.coroutines.*
 import timber.log.Timber
 import javax.inject.Inject
@@ -32,7 +41,9 @@ constructor(
     @InternalCoroutinesApi
     fun searchBlogPosts(
             authToken: AuthToken,
-            query: String
+            query: String,
+            filterAndOrder: String,
+            page: Int
     ): LiveData<DataState<BlogViewState>> {
         return object: NetworkBoundResource<BlogListSearchResponse, List<BlogPost>, BlogViewState>(
                 sessionManager.isConnectedToTheInternet(),
@@ -46,6 +57,10 @@ constructor(
 
                     // finishing by viewing db cache
                     result.addSource(loadFromCache()){ viewState ->
+                        viewState.blogFields.isQueryInProgress = false
+                        if(page * PAGINATION_PAGE_SIZE > viewState.blogFields.blogList.size){
+                            viewState.blogFields.isQueryExhausted = true
+                        }
                         onCompleteJob(DataState.data(viewState, null))
                     }
                 }
@@ -79,19 +94,25 @@ constructor(
             override fun createCall(): LiveData<GenericApiResponse<BlogListSearchResponse>> {
                 return openApiMainService.searchListBlogPosts(
                         "Token ${authToken.token!!}",
-                        query = query
+                        query = query,
+                        ordering = filterAndOrder,
+                        page = page
                 )
             }
 
             override fun loadFromCache(): LiveData<BlogViewState> {
-                return blogPostDao.getAllBlogPosts()
+                return blogPostDao.returnOrderedBlogQuery(
+                        query = query,
+                        filterAndOrder = filterAndOrder,
+                        page = page)
                         .switchMap {
                             object: LiveData<BlogViewState>(){
                                 override fun onActive() {
                                     super.onActive()
                                     value = BlogViewState(
-                                            BlogViewState.BlogFields(
-                                                    blogList = it
+                                            BlogFields(
+                                                    blogList = it,
+                                                    isQueryInProgress = true
                                             )
                                     )
                                 }
@@ -136,6 +157,85 @@ constructor(
             override fun setJob(job: Job) {
                 addJob("searchBlogPosts", job)
             }
+
+        }.asLiveData()
+    }
+
+    @InternalCoroutinesApi
+    fun isAuthorOfBlogPost(
+            authToken: AuthToken,
+            slug: String
+    ): LiveData<DataState<BlogViewState>> {
+        return object: NetworkBoundResource<GenericResponse, Any, BlogViewState>(
+                sessionManager.isConnectedToTheInternet(),
+                true,
+                true,
+                false
+        ){
+
+
+            // not applicable
+            override suspend fun createCacheRequestAndReturn() {
+
+            }
+
+            override suspend fun handleApiSuccessResponse(response: ApiSuccessResponse<GenericResponse>) {
+                withContext(Dispatchers.Main){
+
+                    Timber.d("handleApiSuccessResponse: ${response.body.response}")
+                    if(response.body.response == RESPONSE_NO_PERMISSION_TO_EDIT){
+                        onCompleteJob(
+                                DataState.data(
+                                        data = BlogViewState(
+                                                viewBlogFields = ViewBlogFields(
+                                                        isAuthorOfBlogPost = false
+                                                )
+                                        ),
+                                        response = null
+                                )
+                        )
+                    }
+                    else if(response.body.response == RESPONSE_HAS_PERMISSION_TO_EDIT){
+                        onCompleteJob(
+                                DataState.data(
+                                        data = BlogViewState(
+                                                viewBlogFields = ViewBlogFields(
+                                                        isAuthorOfBlogPost = true
+                                                )
+                                        ),
+                                        response = null
+                                )
+                        )
+                    }
+                    else{
+                        onErrorReturn(ERROR_UNKNOWN, shouldUseDialog = false, shouldUseToast = false)
+                    }
+                }
+            }
+
+            // not applicable
+            override fun loadFromCache(): LiveData<BlogViewState> {
+                return AbsentLiveData.create()
+            }
+
+            // Make an update and change nothing.
+            // If they are not the author it will return: "You don't have permission to edit that."
+            override fun createCall(): LiveData<GenericApiResponse<GenericResponse>> {
+                return openApiMainService.isAuthorOfBlogPost(
+                        "Token ${authToken.token!!}",
+                        slug
+                )
+            }
+
+            // not applicable
+            override suspend fun updateLocalDb(cacheObject: Any?) {
+
+            }
+
+            override fun setJob(job: Job) {
+                addJob("isAuthorOfBlogPost", job)
+            }
+
 
         }.asLiveData()
     }

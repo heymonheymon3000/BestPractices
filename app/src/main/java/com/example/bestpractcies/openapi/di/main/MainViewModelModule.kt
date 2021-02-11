@@ -2,9 +2,8 @@ package com.example.bestpractcies.openapi.di.main
 
 import androidx.lifecycle.ViewModel
 import com.example.bestpractcies.openapi.di.ViewModelKey
-import com.example.bestpractcies.openapi.ui.auth.AuthViewModel
 import com.example.bestpractcies.openapi.ui.main.account.AccountViewModel
-import com.example.bestpractcies.openapi.ui.main.blog.BlogViewModel
+import com.example.bestpractcies.openapi.ui.main.blog.viewmodel.BlogViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap

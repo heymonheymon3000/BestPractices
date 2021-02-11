@@ -6,9 +6,11 @@ import com.example.bestpractcies.openapi.repository.main.AccountRepository
 import com.example.bestpractcies.openapi.session.SessionManager
 import com.example.bestpractcies.openapi.ui.BaseViewModel
 import com.example.bestpractcies.openapi.ui.DataState
+import com.example.bestpractcies.openapi.ui.Loading
 import com.example.bestpractcies.openapi.ui.main.account.state.AccountStateEvent
 import com.example.bestpractcies.openapi.ui.main.account.state.AccountStateEvent.*
 import com.example.bestpractcies.openapi.ui.main.account.state.AccountViewState
+import com.example.bestpractcies.openapi.ui.main.blog.state.BlogViewState
 import com.example.bestpractcies.openapi.util.AbsentLiveData
 import kotlinx.coroutines.InternalCoroutinesApi
 import javax.inject.Inject
@@ -58,7 +60,12 @@ constructor(
             }
 
             is None -> {
-                return AbsentLiveData.create()
+                return object: LiveData<DataState<AccountViewState>>(){
+                    override fun onActive() {
+                        super.onActive()
+                        value = DataState(null, Loading(false), null)
+                    }
+                }
             }
         }
     }
