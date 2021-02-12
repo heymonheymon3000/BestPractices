@@ -15,5 +15,7 @@ sealed class BlogStateEvent {
             val image: MultipartBody.Part?
     ): BlogStateEvent()
 
+    class RestoreBlogListFromCache: BlogStateEvent()
+
     class None: BlogStateEvent()
 }

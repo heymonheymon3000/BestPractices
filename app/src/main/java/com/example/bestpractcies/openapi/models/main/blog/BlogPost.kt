@@ -1,8 +1,10 @@
 package com.example.bestpractcies.openapi.models.main.blog
 
+import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.android.parcel.Parcelize
 
 
 /**
@@ -10,7 +12,7 @@ import androidx.room.PrimaryKey
 see example: https://gist.github.com/mitchtabian/93f287bd1370e7a1ad3c9588b0b22e3d
  * Docs: https://open-api.xyz/api/
  */
-
+@Parcelize
 @Entity(tableName = "blog_post")
 data class BlogPost(
 
@@ -37,7 +39,7 @@ data class BlogPost(
     var username: String
 
 
-) {
+): Parcelable {
 
     override fun toString(): String {
         return "BlogPost(pk=$pk, " +

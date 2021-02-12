@@ -39,7 +39,7 @@ class ViewBlogFragment : BaseBlogFragment(){
         }
     }
 
-    fun confirmDeleteRequest(){
+    private fun confirmDeleteRequest(){
         val callback: AreYouSureCallback = object: AreYouSureCallback {
             override fun proceed() {
                 deleteBlogPost()
@@ -69,18 +69,20 @@ class ViewBlogFragment : BaseBlogFragment(){
 
     fun subscribeObservers(){
         viewModel.dataState.observe(viewLifecycleOwner, Observer{ dataState ->
-            stateChangeListener.onDataStateChange(dataState)
-            dataState.data?.let { data ->
-                data.data?.getContentIfNotHandled()?.let { viewState ->
-                    viewModel.setIsAuthorOfBlogPost(
-                            viewState.viewBlogFields.isAuthorOfBlogPost
-                    )
-                }
+            if(dataState != null) {
+                stateChangeListener.onDataStateChange(dataState)
+                dataState.data?.let { data ->
+                    data.data?.getContentIfNotHandled()?.let { viewState ->
+                        viewModel.setIsAuthorOfBlogPost(
+                                viewState.viewBlogFields.isAuthorOfBlogPost
+                        )
+                    }
 
-                data.response?.peekContent()?.let{ response ->
-                    if(response.message.equals(SUCCESS_BLOG_DELETED)){
-                        viewModel.removeDeletedBlogPost()
-                        findNavController().popBackStack()
+                    data.response?.peekContent()?.let{ response ->
+                        if(response.message.equals(SUCCESS_BLOG_DELETED)){
+                            viewModel.removeDeletedBlogPost()
+                            findNavController().popBackStack()
+                        }
                     }
                 }
             }
@@ -106,7 +108,7 @@ class ViewBlogFragment : BaseBlogFragment(){
     }
 
     fun setBlogProperties(blogPost: BlogPost){
-        requestManager
+        dependencyProvider.getGlideRequestManager()
                 .load(blogPost.image)
                 .into(blog_image)
 

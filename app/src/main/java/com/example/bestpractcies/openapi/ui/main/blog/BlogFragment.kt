@@ -3,7 +3,6 @@ package com.example.bestpractcies.openapi.ui.main.blog
 import android.app.SearchManager
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -35,6 +34,7 @@ import handleIncomingBlogListData
 import kotlinx.android.synthetic.main.fragment_blog.*
 import loadFirstPage
 import nextPage
+import refreshFromCache
 import timber.log.Timber
 
 class BlogFragment : BaseBlogFragment(),
@@ -62,9 +62,21 @@ class BlogFragment : BaseBlogFragment(),
 
         initRecyclerView()
         subscribeObservers()
+    }
 
-        if(savedInstanceState == null) {
-            viewModel.loadFirstPage()
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshFromCache()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        saveLayoutManagerState()
+    }
+
+    private fun saveLayoutManagerState(){
+        blog_post_recyclerview.layoutManager?.onSaveInstanceState()?.let { lmState ->
+            viewModel.setLayoutManagerState(lmState)
         }
     }
 
@@ -94,7 +106,7 @@ class BlogFragment : BaseBlogFragment(),
             if(viewState != null){
                 recyclerAdapter.apply {
                     preloadGlideImages(
-                            requestManager,
+                            dependencyProvider.getGlideRequestManager(),
                             viewState.blogFields.blogList
                     )
                     submitList(
@@ -143,7 +155,7 @@ class BlogFragment : BaseBlogFragment(),
             removeItemDecoration(topSpacingDecorator) // does nothing if not applied already
             addItemDecoration(topSpacingDecorator)
 
-            recyclerAdapter = BlogListAdapter(requestManager,  this@BlogFragment)
+            recyclerAdapter = BlogListAdapter(dependencyProvider.getGlideRequestManager(),  this@BlogFragment)
             addOnScrollListener(object: RecyclerView.OnScrollListener(){
 
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -164,6 +176,12 @@ class BlogFragment : BaseBlogFragment(),
         Timber.d("onItemSelected: position, BlogPost: $position, $item")
         viewModel.setBlogPost(item)
         findNavController().navigate(R.id.action_blogFragment_to_viewBlogFragment)
+    }
+
+    override fun restoreListPosition() {
+        viewModel.viewState.value?.blogFields?.layoutManagerState?.let { lmState ->
+            blog_post_recyclerview?.layoutManager?.onRestoreInstanceState(lmState)
+        }
     }
 
     override fun onDestroyView() {

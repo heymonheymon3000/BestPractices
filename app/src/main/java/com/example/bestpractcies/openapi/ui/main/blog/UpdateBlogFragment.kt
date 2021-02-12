@@ -55,18 +55,21 @@ class UpdateBlogFragment : BaseBlogFragment(){
 
     fun subscribeObservers(){
         viewModel.dataState.observe(viewLifecycleOwner, Observer { dataState ->
-            stateChangeListener.onDataStateChange(dataState)
-            dataState.data?.let{ data ->
-                data.data?.getContentIfNotHandled()?.let{ viewState ->
+            if(dataState != null) {
+                stateChangeListener.onDataStateChange(dataState)
+                dataState.data?.let{ data ->
+                    data.data?.getContentIfNotHandled()?.let{ viewState ->
 
-                    // if this is not null, the blogpost was updated
-                    viewState.viewBlogFields.blogPost?.let{ blogPost ->
-                        viewModel.onBlogPostUpdateSuccess(blogPost).let {
-                            findNavController().popBackStack()
+                        // if this is not null, the blogpost was updated
+                        viewState.viewBlogFields.blogPost?.let{ blogPost ->
+                            viewModel.onBlogPostUpdateSuccess(blogPost).let {
+                                findNavController().popBackStack()
+                            }
                         }
                     }
                 }
             }
+
         })
 
         viewModel.viewState.observe(viewLifecycleOwner, Observer { viewState ->
@@ -81,7 +84,7 @@ class UpdateBlogFragment : BaseBlogFragment(){
     }
 
     fun setBlogProperties(title: String?, body: String?, image: Uri?){
-        requestManager
+        dependencyProvider.getGlideRequestManager()
                 .load(image)
                 .into(blog_image)
         blog_title.setText(title)

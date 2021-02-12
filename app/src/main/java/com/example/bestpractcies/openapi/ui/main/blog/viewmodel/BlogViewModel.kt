@@ -1,6 +1,7 @@
 package com.example.bestpractcies.openapi.ui.main.blog.viewmodel
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.LiveData
 import com.bumptech.glide.RequestManager
 import com.example.bestpractcies.openapi.persistence.BlogQueryUtils
@@ -18,6 +19,7 @@ import com.example.bestpractcies.openapi.util.PreferenceKeys.Companion.BLOG_ORDE
 import kotlinx.coroutines.InternalCoroutinesApi
 import okhttp3.MediaType
 import okhttp3.RequestBody
+import timber.log.Timber
 import javax.inject.Inject
 
 class BlogViewModel
@@ -49,6 +51,8 @@ constructor(
     override fun handleStateEvent(stateEvent: BlogStateEvent): LiveData<DataState<BlogViewState>> {
         return when(stateEvent){
             is BlogSearchEvent ->{
+                Timber.d("Blog Search Event...")
+                clearLayoutManagerState()
                 return sessionManager.cachedToken.value?.let { authToken ->
                     blogRepository.searchBlogPosts(
                             authToken = authToken,
@@ -58,6 +62,14 @@ constructor(
 
                     )
                 }?: AbsentLiveData.create()
+            }
+
+            is RestoreBlogListFromCache -> {
+                return blogRepository.restoreBlogListFromCache(
+                        query = getSearchQuery(),
+                        filterAndOrder = getOrder() + getFilter(),
+                        page = getPage()
+                )
             }
 
             is CheckAuthorOfBlogPost -> {

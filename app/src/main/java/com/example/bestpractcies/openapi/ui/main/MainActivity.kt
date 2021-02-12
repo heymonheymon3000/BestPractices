@@ -9,9 +9,10 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
+import com.bumptech.glide.RequestManager
 import com.example.bestpractcies.R
-import com.example.bestpractcies.openapi.api.auth.network.responses.RegistrationResponse
-import com.example.bestpractcies.openapi.models.auth.AccountProperties
+import com.example.bestpractcies.openapi.models.auth.AUTH_TOKEN_BUNDLE_KEY
+import com.example.bestpractcies.openapi.models.auth.AuthToken
 import com.example.bestpractcies.openapi.ui.BaseActivity
 import com.example.bestpractcies.openapi.ui.auth.AuthActivity
 import com.example.bestpractcies.openapi.ui.main.account.BaseAccountFragment
@@ -22,19 +23,28 @@ import com.example.bestpractcies.openapi.ui.main.blog.UpdateBlogFragment
 import com.example.bestpractcies.openapi.ui.main.blog.ViewBlogFragment
 import com.example.bestpractcies.openapi.ui.main.createblog.BaseCreateBlogFragment
 import com.example.bestpractcies.openapi.util.*
+import com.example.bestpractcies.openapi.viewModels.ViewModelProviderFactory
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main.progress_bar
 import retrofit2.Response
 import timber.log.Timber
+import javax.inject.Inject
 
 class MainActivity : BaseActivity(),
         BottomNavController.NavGraphProvider,
         BottomNavController.OnNavigationGraphChanged,
-        BottomNavController.OnNavigationReselectedListener{
+        BottomNavController.OnNavigationReselectedListener,
+        MainDependencyProvider{
 
     private lateinit var bottomNavigationView: BottomNavigationView
+
+    @Inject
+    lateinit var providerFactory: ViewModelProviderFactory
+
+    @Inject
+    lateinit var requestManager: RequestManager
 
     private val bottomNavController by lazy(LazyThreadSafetyMode.NONE) {
         BottomNavController(
@@ -45,6 +55,18 @@ class MainActivity : BaseActivity(),
                 this)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putParcelable(AUTH_TOKEN_BUNDLE_KEY, sessionManager.cachedToken.value)
+        // save backstack for bottom nav
+        outState.putIntArray(BOTTOM_NAV_BACKSTACK_KEY, bottomNavController.navigationBackStack.toIntArray())
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun restoreSession(savedInstanceState: Bundle?){
+        savedInstanceState?.get(AUTH_TOKEN_BUNDLE_KEY)?.let{ authToken ->
+            sessionManager.setValue(authToken as AuthToken)
+        }
+    }
 
     override fun displayProgressBar(bool: Boolean) {
         if(bool) {
@@ -61,13 +83,29 @@ class MainActivity : BaseActivity(),
 
         setupActionBar()
 
+        setupBottomNavigationView(savedInstanceState)
+
+
+        subscribeObservers()
+        restoreSession(savedInstanceState)
+
+    }
+
+
+    private fun setupBottomNavigationView(savedInstanceState: Bundle?){
         bottomNavigationView = findViewById(R.id.bottom_navigation_view)
         bottomNavigationView.setUpNavigation(bottomNavController, this)
         if (savedInstanceState == null) {
+            bottomNavController.setupBottomNavigationBackStack(null)
             bottomNavController.onNavigationItemSelected()
         }
-
-        subscribeObservers()
+        else{
+            (savedInstanceState[BOTTOM_NAV_BACKSTACK_KEY] as IntArray?)?.let { items ->
+                val backstack = BottomNavController.BackStack()
+                backstack.addAll(items.toTypedArray())
+                bottomNavController.setupBottomNavigationBackStack(backstack)
+            }
+        }
     }
 
     override fun onBackPressed() = bottomNavController.onBackPressed()
@@ -168,5 +206,13 @@ class MainActivity : BaseActivity(),
     }
 
 
+
+    override fun getGlideRequestManager(): RequestManager {
+        return requestManager
+    }
+
+    override fun getVMProviderFactory(): ViewModelProviderFactory {
+        return providerFactory
+    }
 
 }

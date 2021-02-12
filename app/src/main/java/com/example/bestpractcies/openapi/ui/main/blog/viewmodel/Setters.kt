@@ -1,6 +1,7 @@
 package com.example.bestpractcies.openapi.ui.main.blog.viewmodel
 
 import android.net.Uri
+import android.os.Parcelable
 import com.example.bestpractcies.openapi.models.main.blog.BlogPost
 
 fun BlogViewModel.setBlogPost(blogPost: BlogPost){
@@ -55,6 +56,19 @@ fun BlogViewModel.setBlogOrder(order: String){
     update.blogFields.order = order
     setViewState(update)
 }
+
+fun BlogViewModel.setLayoutManagerState(layoutManagerState: Parcelable){
+    val update = getCurrentViewStateOrNew()
+    update.blogFields.layoutManagerState = layoutManagerState
+    setViewState(update)
+}
+
+fun BlogViewModel.clearLayoutManagerState(){
+    val update = getCurrentViewStateOrNew()
+    update.blogFields.layoutManagerState = null
+    setViewState(update)
+}
+
 
 fun BlogViewModel.removeDeletedBlogPost(){
     val update = getCurrentViewStateOrNew()
