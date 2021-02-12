@@ -3,11 +3,13 @@ package com.example.bestpractcies.openapi.api.auth
 import androidx.lifecycle.LiveData
 import com.example.bestpractcies.openapi.api.auth.network.responses.LoginResponse
 import com.example.bestpractcies.openapi.api.auth.network.responses.RegistrationResponse
+import com.example.bestpractcies.openapi.di.auth.AuthScope
 import com.example.bestpractcies.openapi.util.GenericApiResponse
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
 
+@AuthScope
 interface OpenApiAuthService {
     @POST("account/login")
     @FormUrlEncoded

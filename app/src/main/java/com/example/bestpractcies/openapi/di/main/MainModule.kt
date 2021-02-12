@@ -1,8 +1,6 @@
 package com.example.bestpractcies.openapi.di.main
 
-import com.example.bestpractcies.openapi.api.auth.OpenApiAuthService
 import com.example.bestpractcies.openapi.api.main.OpenApiMainService
-import com.example.bestpractcies.openapi.di.auth.AuthScope
 import com.example.bestpractcies.openapi.persistence.AppDatabase
 import com.example.bestpractcies.openapi.persistence.auth.AccountPropertiesDao
 import com.example.bestpractcies.openapi.persistence.main.BlogPostDao
@@ -14,9 +12,11 @@ import dagger.Module
 import dagger.Provides
 import retrofit2.Retrofit
 
-@Module
-class MainModule {
 
+@Module
+object MainModule {
+
+    @JvmStatic
     @MainScope
     @Provides
     fun provideOpenApiAccountService(retrofitBuilder: Retrofit.Builder): OpenApiMainService {
@@ -25,6 +25,7 @@ class MainModule {
                 .create(OpenApiMainService::class.java)
     }
 
+    @JvmStatic
     @MainScope
     @Provides
     fun provideAccountRepository(
@@ -39,12 +40,14 @@ class MainModule {
         )
     }
 
+    @JvmStatic
     @MainScope
     @Provides
     fun provideBlogPostDao(db: AppDatabase): BlogPostDao {
         return db.getBlogPostDao()
     }
 
+    @JvmStatic
     @MainScope
     @Provides
     fun provideBlogRepository(
@@ -55,6 +58,7 @@ class MainModule {
         return BlogRepository(openApiMainService, blogPostDao, sessionManager)
     }
 
+    @JvmStatic
     @MainScope
     @Provides
     fun provideCreateBlogRepository(

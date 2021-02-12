@@ -2,10 +2,12 @@ package com.example.bestpractcies.openapi.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.bestpractcies.openapi.di.auth.AuthScope
 import javax.inject.Inject
 import javax.inject.Provider
 
-class ViewModelProviderFactory
+@AuthScope
+class AuthViewModelFactory
 @Inject
 constructor(
     private val creators: Map<Class<out ViewModel>, @JvmSuppressWildcards Provider<ViewModel>>

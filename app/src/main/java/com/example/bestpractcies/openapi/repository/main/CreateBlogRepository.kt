@@ -3,6 +3,7 @@ package com.example.bestpractcies.openapi.repository.main
 import androidx.lifecycle.LiveData
 import com.example.bestpractcies.openapi.api.main.OpenApiMainService
 import com.example.bestpractcies.openapi.api.main.network.responses.BlogCreateUpdateResponse
+import com.example.bestpractcies.openapi.di.main.MainScope
 import com.example.bestpractcies.openapi.models.auth.AuthToken
 import com.example.bestpractcies.openapi.models.main.blog.BlogPost
 import com.example.bestpractcies.openapi.persistence.main.BlogPostDao
@@ -26,6 +27,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import javax.inject.Inject
 
+@MainScope
 class CreateBlogRepository
 @Inject
 constructor(

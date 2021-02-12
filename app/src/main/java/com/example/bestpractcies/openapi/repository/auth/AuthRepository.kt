@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import com.example.bestpractcies.openapi.api.auth.OpenApiAuthService
 import com.example.bestpractcies.openapi.api.auth.network.responses.LoginResponse
 import com.example.bestpractcies.openapi.api.auth.network.responses.RegistrationResponse
+import com.example.bestpractcies.openapi.di.auth.AuthScope
 import com.example.bestpractcies.openapi.models.auth.AccountProperties
 import com.example.bestpractcies.openapi.models.auth.AuthToken
 import com.example.bestpractcies.openapi.persistence.auth.AccountPropertiesDao
@@ -31,6 +32,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.Job
 import timber.log.Timber
 
+@AuthScope
 class AuthRepository
 @Inject
 constructor(

@@ -10,8 +10,13 @@ import android.view.animation.TranslateAnimation
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.bestpractcies.R
+import com.example.bestpractcies.openapi.di.auth.AuthScope
+import com.example.bestpractcies.openapi.di.main.MainScope
 import com.example.bestpractcies.openapi.ui.DataState
 import com.example.bestpractcies.openapi.ui.DataStateChangeListener
 import com.example.bestpractcies.openapi.ui.Response
@@ -22,12 +27,26 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-class ForgotPasswordFragment : BaseAuthFragment() {
+@AuthScope
+class ForgotPasswordFragment @Inject
+constructor(
+    private val viewModelFactory: ViewModelProvider.Factory
+): Fragment(R.layout.fragment_forgot_password) {
 
     lateinit var webView: WebView
 
     lateinit var stateChangeListener: DataStateChangeListener
+
+    val viewModel: AuthViewModel by viewModels{
+        viewModelFactory
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel.cancelActiveJobs()
+    }
 
     private val webInteractionCallback = object: WebAppInterface.OnWebInteractionCallback {
 

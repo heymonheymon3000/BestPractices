@@ -3,12 +3,14 @@ package com.example.bestpractcies.openapi.ui
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Bundle
 import android.view.inputmethod.InputMethodManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.bestpractcies.openapi.BaseApplication
 import com.example.bestpractcies.openapi.session.SessionManager
 import com.example.bestpractcies.openapi.util.Constants.Companion.PERMISSIONS_REQUEST_READ_STORAGE
-import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -16,10 +18,17 @@ import timber.log.Timber
 import javax.inject.Inject
 
 abstract class BaseActivity:
-    DaggerAppCompatActivity(),
+    AppCompatActivity(),
     DataStateChangeListener, UICommunicationListener {
     @Inject
     lateinit var sessionManager: SessionManager
+    abstract fun inject()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        (application as BaseApplication).appComponent
+            .inject(this)
+        super.onCreate(savedInstanceState)
+    }
 
     override fun onDataStateChange(dataState: DataState<*>?) {
         dataState?.let{

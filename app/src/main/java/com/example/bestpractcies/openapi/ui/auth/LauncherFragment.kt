@@ -5,20 +5,28 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.bestpractcies.R
+import com.example.bestpractcies.openapi.di.auth.AuthScope
 import kotlinx.android.synthetic.main.fragment_launcher.*
 import timber.log.Timber
+import javax.inject.Inject
 
+@AuthScope
+class LauncherFragment @Inject
+constructor(
+    private val viewModelFactory: ViewModelProvider.Factory
+): Fragment(R.layout.fragment_launcher) {
 
-class LauncherFragment : BaseAuthFragment() {
+    val viewModel: AuthViewModel by viewModels{
+        viewModelFactory
+    }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_launcher, container, false)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel.cancelActiveJobs()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -37,8 +45,6 @@ class LauncherFragment : BaseAuthFragment() {
         }
 
         focusable_view.requestFocus() // reset focus
-
-        Timber.d("LauncherFragment: ${viewModel.hashCode()}")
     }
 
     private fun navForgotPassword() {

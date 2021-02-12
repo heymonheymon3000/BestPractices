@@ -12,6 +12,9 @@ import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.bestpractcies.R
+import com.example.bestpractcies.openapi.fragments.main.account.AccountNavHostFragment
+import com.example.bestpractcies.openapi.fragments.main.blog.BlogNavHostFragment
+import com.example.bestpractcies.openapi.fragments.main.create_blog.CreateBlogNavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.parcel.Parcelize
 
@@ -28,9 +31,8 @@ class BottomNavController(
     val context: Context,
     @IdRes val containerId: Int,
     @IdRes val appStartDestinationId: Int,
-    val graphChangeListener: OnNavigationGraphChanged?,
-    val navGraphProvider: NavGraphProvider
-) {
+    val graphChangeListener: OnNavigationGraphChanged?
+    ) {
     lateinit var navigationBackStack: BackStack
 
     lateinit var activity: Activity
@@ -55,7 +57,7 @@ class BottomNavController(
 
         // Replace fragment representing a navigation item
         val fragment = fragmentManager.findFragmentByTag(itemId.toString())
-            ?: NavHostFragment.create(navGraphProvider.getNavGraphId(itemId))
+            ?: createNavHost(itemId)
         fragmentManager.beginTransaction()
             .setCustomAnimations(
                 R.anim.fade_in,
@@ -78,6 +80,28 @@ class BottomNavController(
 
         return true
     }
+
+    private fun createNavHost(menuItemId: Int): Fragment {
+        return when (menuItemId) {
+
+            R.id.menu_nav_account -> {
+                AccountNavHostFragment.create(R.navigation.nav_account)
+            }
+
+            R.id.menu_nav_blog -> {
+                BlogNavHostFragment.create(R.navigation.nav_blog)
+            }
+
+            R.id.menu_nav_create_blog -> {
+                CreateBlogNavHostFragment.create(R.navigation.nav_create_blog)
+            }
+
+            else -> {
+                BlogNavHostFragment.create(R.navigation.nav_blog)
+            }
+        }
+    }
+
 
     fun onBackPressed() {
         val childFragmentManager = fragmentManager.findFragmentById(containerId)!!
@@ -136,13 +160,7 @@ class BottomNavController(
         fun onItemChanged(itemId: Int)
     }
 
-    // Get id of each graph
-    // ex: R.navigation.nav_blog
-    // ex: R.navigation.nav_create_blog
-    interface NavGraphProvider {
-        @NavigationRes
-        fun getNavGraphId(itemId: Int): Int
-    }
+
 
     // Execute when Navigation Graph changes.
     // ex: Select a new item on the bottom navigation

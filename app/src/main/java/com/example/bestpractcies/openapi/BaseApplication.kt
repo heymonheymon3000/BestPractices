@@ -1,22 +1,24 @@
 package com.example.bestpractcies.openapi
 
-import android.app.Activity
 import android.app.Application
 import com.example.bestpractcies.BuildConfig
-import com.example.bestpractcies.openapi.di.AppInjector
-import dagger.android.DispatchingAndroidInjector
-import dagger.android.HasActivityInjector
+import com.example.bestpractcies.openapi.di.AppComponent
+import com.example.bestpractcies.openapi.di.DaggerAppComponent
+import com.example.bestpractcies.openapi.di.auth.AuthComponent
+import com.example.bestpractcies.openapi.di.main.MainComponent
 import timber.log.Timber
-import javax.inject.Inject
 
-class BaseApplication: Application(), HasActivityInjector {
+class BaseApplication: Application() {
 
-    @Inject
-    lateinit var dispatchingAndroidInjector: DispatchingAndroidInjector<Activity>
+    lateinit var appComponent: AppComponent
+
+    private var authComponent: AuthComponent? = null
+
+    private var mainComponent: MainComponent? = null
 
     override fun onCreate() {
         super.onCreate()
-        AppInjector.init(this)
+        initAppComponent()
 
 
         if(BuildConfig.DEBUG) {
@@ -24,6 +26,32 @@ class BaseApplication: Application(), HasActivityInjector {
         }
     }
 
-    override fun activityInjector() = dispatchingAndroidInjector
+    fun releaseMainComponent(){
+        mainComponent = null
+    }
+
+    fun mainComponent(): MainComponent {
+        if(mainComponent == null){
+            mainComponent = appComponent.mainComponent().create()
+        }
+        return mainComponent as MainComponent
+    }
+
+    fun releaseAuthComponent(){
+        authComponent = null
+    }
+
+    fun authComponent(): AuthComponent {
+        if(authComponent == null){
+            authComponent = appComponent.authComponent().create()
+        }
+        return authComponent as AuthComponent
+    }
+
+    private fun initAppComponent(){
+        appComponent = DaggerAppComponent.builder()
+            .application(this)
+            .build()
+    }
 
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.switchMap
 import com.example.bestpractcies.openapi.api.GenericResponse
 import com.example.bestpractcies.openapi.api.main.OpenApiMainService
+import com.example.bestpractcies.openapi.di.main.MainScope
 import com.example.bestpractcies.openapi.models.auth.AccountProperties
 import com.example.bestpractcies.openapi.models.auth.AuthToken
 import com.example.bestpractcies.openapi.persistence.auth.AccountPropertiesDao
@@ -24,6 +25,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
+@MainScope
 class AccountRepository
 @Inject
 constructor(

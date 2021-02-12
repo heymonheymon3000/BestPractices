@@ -1,30 +1,72 @@
 package com.example.bestpractcies.openapi.ui.main.blog
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.core.net.toUri
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.RequestManager
 import com.example.bestpractcies.R
+import com.example.bestpractcies.openapi.di.main.MainScope
 import com.example.bestpractcies.openapi.models.main.blog.BlogPost
 import com.example.bestpractcies.openapi.ui.AreYouSureCallback
 import com.example.bestpractcies.openapi.ui.UIMessage
 import com.example.bestpractcies.openapi.ui.UIMessageType
+import com.example.bestpractcies.openapi.ui.main.blog.state.BLOG_VIEW_STATE_BUNDLE_KEY
 import com.example.bestpractcies.openapi.ui.main.blog.state.BlogStateEvent.*
+import com.example.bestpractcies.openapi.ui.main.blog.state.BlogViewState
 import com.example.bestpractcies.openapi.ui.main.blog.viewmodel.*
 import com.example.bestpractcies.openapi.util.DateUtils
 import com.example.bestpractcies.openapi.util.SuccessHandling.Companion.SUCCESS_BLOG_DELETED
 import kotlinx.android.synthetic.main.fragment_view_blog.*
 import timber.log.Timber
+import javax.inject.Inject
 
-class ViewBlogFragment : BaseBlogFragment(){
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_view_blog, container, false)
+@MainScope
+class ViewBlogFragment
+@Inject
+constructor(
+        private val viewModelFactory: ViewModelProvider.Factory,
+        private val requestManager: RequestManager
+): BaseBlogFragment(R.layout.fragment_view_blog)
+{
+
+    val viewModel: BlogViewModel by viewModels{
+        viewModelFactory
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        cancelActiveJobs()
+        // Restore state after process death
+        savedInstanceState?.let { inState ->
+            (inState[BLOG_VIEW_STATE_BUNDLE_KEY] as BlogViewState?)?.let { viewState ->
+                viewModel.setViewState(viewState)
+            }
+        }
+    }
+
+    /**
+     * !IMPORTANT!
+     * Must save ViewState b/c in event of process death the LiveData in ViewModel will be lost
+     */
+    override fun onSaveInstanceState(outState: Bundle) {
+        val viewState = viewModel.viewState.value
+
+        //clear the list. Don't want to save a large list to bundle.
+        viewState?.blogFields?.blogList = ArrayList()
+
+        outState.putParcelable(
+                BLOG_VIEW_STATE_BUNDLE_KEY,
+                viewState
+        )
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun cancelActiveJobs(){
+        viewModel.cancelActiveJobs()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -39,21 +81,23 @@ class ViewBlogFragment : BaseBlogFragment(){
         }
     }
 
-    private fun confirmDeleteRequest(){
+    fun confirmDeleteRequest(){
         val callback: AreYouSureCallback = object: AreYouSureCallback {
+
             override fun proceed() {
                 deleteBlogPost()
             }
+
             override fun cancel() {
                 // ignore
             }
-        }
 
+        }
         uiCommunicationListener.onUIMessageReceived(
-            UIMessage(
-                    getString(R.string.are_you_sure_delete),
-                    UIMessageType.AreYouSureDialog(callback)
-            )
+                UIMessage(
+                        getString(R.string.are_you_sure_delete),
+                        UIMessageType.AreYouSureDialog(callback)
+                )
         )
     }
 
@@ -62,22 +106,23 @@ class ViewBlogFragment : BaseBlogFragment(){
                 DeleteBlogPostEvent()
         )
     }
-    private fun checkIsAuthorOfBlogPost(){
+
+    fun checkIsAuthorOfBlogPost(){
         viewModel.setIsAuthorOfBlogPost(false) // reset
         viewModel.setStateEvent(CheckAuthorOfBlogPost())
     }
 
     fun subscribeObservers(){
         viewModel.dataState.observe(viewLifecycleOwner, Observer{ dataState ->
-            if(dataState != null) {
-                stateChangeListener.onDataStateChange(dataState)
+            stateChangeListener.onDataStateChange(dataState)
+
+            if(dataState != null){
                 dataState.data?.let { data ->
                     data.data?.getContentIfNotHandled()?.let { viewState ->
                         viewModel.setIsAuthorOfBlogPost(
                                 viewState.viewBlogFields.isAuthorOfBlogPost
                         )
                     }
-
                     data.response?.peekContent()?.let{ response ->
                         if(response.message.equals(SUCCESS_BLOG_DELETED)){
                             viewModel.removeDeletedBlogPost()
@@ -89,8 +134,6 @@ class ViewBlogFragment : BaseBlogFragment(){
         })
 
         viewModel.viewState.observe(viewLifecycleOwner, Observer { viewState ->
-
-
             viewState.viewBlogFields.blogPost?.let{ blogPost ->
                 setBlogProperties(blogPost)
             }
@@ -98,20 +141,18 @@ class ViewBlogFragment : BaseBlogFragment(){
             if(viewState.viewBlogFields.isAuthorOfBlogPost){
                 adaptViewToAuthorMode()
             }
-
         })
     }
 
-    private fun adaptViewToAuthorMode(){
+    fun adaptViewToAuthorMode(){
         activity?.invalidateOptionsMenu()
         delete_button.visibility = View.VISIBLE
     }
 
     fun setBlogProperties(blogPost: BlogPost){
-        dependencyProvider.getGlideRequestManager()
+        requestManager
                 .load(blogPost.image)
                 .into(blog_image)
-
         blog_title.text = blogPost.title
         blog_author.text = blogPost.username
         blog_update_date.text = DateUtils.convertLongToStringDate(blogPost.date_updated)
@@ -151,3 +192,16 @@ class ViewBlogFragment : BaseBlogFragment(){
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

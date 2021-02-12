@@ -8,6 +8,7 @@ import com.example.bestpractcies.openapi.api.GenericResponse
 import com.example.bestpractcies.openapi.api.main.OpenApiMainService
 import com.example.bestpractcies.openapi.api.main.network.responses.BlogCreateUpdateResponse
 import com.example.bestpractcies.openapi.api.main.network.responses.BlogListSearchResponse
+import com.example.bestpractcies.openapi.di.main.MainScope
 import com.example.bestpractcies.openapi.models.auth.AuthToken
 import com.example.bestpractcies.openapi.models.main.blog.BlogPost
 import com.example.bestpractcies.openapi.persistence.main.BlogPostDao
@@ -35,6 +36,7 @@ import okhttp3.RequestBody
 import timber.log.Timber
 import javax.inject.Inject
 
+@MainScope
 class BlogRepository
 @Inject
 constructor(
