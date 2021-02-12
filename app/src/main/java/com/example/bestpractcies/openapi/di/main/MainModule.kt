@@ -8,6 +8,7 @@ import com.example.bestpractcies.openapi.persistence.auth.AccountPropertiesDao
 import com.example.bestpractcies.openapi.persistence.main.BlogPostDao
 import com.example.bestpractcies.openapi.repository.main.AccountRepository
 import com.example.bestpractcies.openapi.repository.main.BlogRepository
+import com.example.bestpractcies.openapi.repository.main.CreateBlogRepository
 import com.example.bestpractcies.openapi.session.SessionManager
 import dagger.Module
 import dagger.Provides
@@ -52,5 +53,15 @@ class MainModule {
             sessionManager: SessionManager
     ): BlogRepository {
         return BlogRepository(openApiMainService, blogPostDao, sessionManager)
+    }
+
+    @MainScope
+    @Provides
+    fun provideCreateBlogRepository(
+            openApiMainService: OpenApiMainService,
+            blogPostDao: BlogPostDao,
+            sessionManager: SessionManager
+    ): CreateBlogRepository {
+        return CreateBlogRepository(openApiMainService, blogPostDao, sessionManager)
     }
 }

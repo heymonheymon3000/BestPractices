@@ -125,4 +125,8 @@ dependencies {
     //logging
     def timber_version = "4.7.1"
     implementation "com.jakewharton.timber:timber:$timber_version"
+
+    // Android-Image-Cropper
+    def android_image_cropper_version = "2.8.+"
+    api "com.theartofdev.edmodo:android-image-cropper:$android_image_cropper_version"
 }
