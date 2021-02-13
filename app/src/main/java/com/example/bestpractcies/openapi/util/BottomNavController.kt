@@ -34,7 +34,6 @@ class BottomNavController(
     val graphChangeListener: OnNavigationGraphChanged?
     ) {
     lateinit var navigationBackStack: BackStack
-
     lateinit var activity: Activity
     lateinit var fragmentManager: FragmentManager
     lateinit var navItemChangeListener: OnNavigationItemChanged

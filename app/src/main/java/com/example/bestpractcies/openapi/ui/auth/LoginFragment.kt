@@ -22,7 +22,7 @@ import javax.inject.Inject
 class LoginFragment @Inject
 constructor(
     private val viewModelFactory: ViewModelProvider.Factory
-): Fragment(R.layout.fragment_register) {
+): Fragment(R.layout.fragment_login) {
 
     val viewModel: AuthViewModel by viewModels{
         viewModelFactory

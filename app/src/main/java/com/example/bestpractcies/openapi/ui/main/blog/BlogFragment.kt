@@ -101,12 +101,16 @@ constructor(
 
         initRecyclerView()
         subscribeObservers()
+
+        if(savedInstanceState == null){
+            viewModel.loadFirstPage()
+        }
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.refreshFromCache()
-    }
+//    override fun onResume() {
+//        super.onResume()
+//        viewModel.refreshFromCache()
+//    }
 
     override fun onPause() {
         super.onPause()

@@ -26,14 +26,14 @@ constructor(
     private val _cachedToken = MutableLiveData<AuthToken>()
 
     companion object {
-        private var _isConnectedToInternet: Boolean = false
+        private var _isConnectedToInternet: Boolean = true
     }
 
     val cachedToken: LiveData<AuthToken>
         get() = _cachedToken
 
     init {
-        registerNetworkCallback()
+        //registerNetworkCallback()
     }
 
     fun login(newValue: AuthToken) {
@@ -73,7 +73,7 @@ constructor(
     }
 
     fun isConnectedToTheInternet(): Boolean{
-        return _isConnectedToInternet
+        return true
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
