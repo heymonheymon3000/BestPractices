@@ -2,44 +2,36 @@ package com.example.bestpractcies.openapi.ui.main.account
 
 import android.os.Bundle
 import android.view.*
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.bestpractcies.R
-import com.example.bestpractcies.openapi.di.main.MainScope
 import com.example.bestpractcies.openapi.models.auth.AccountProperties
 import com.example.bestpractcies.openapi.ui.main.account.state.ACCOUNT_VIEW_STATE_BUNDLE_KEY
 import com.example.bestpractcies.openapi.ui.main.account.state.AccountStateEvent
 import com.example.bestpractcies.openapi.ui.main.account.state.AccountViewState
+import com.example.bestpractcies.openapi.util.StateMessageCallback
 import kotlinx.android.synthetic.main.fragment_account.*
-import timber.log.Timber
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import javax.inject.Inject
 
-@MainScope
+@FlowPreview
+@ExperimentalCoroutinesApi
 class AccountFragment
 @Inject
 constructor(
-        private val viewModelFactory: ViewModelProvider.Factory
-): BaseAccountFragment(R.layout.fragment_account) {
-
-    val viewModel: AccountViewModel by viewModels{
-        viewModelFactory
-    }
+        viewModelFactory: ViewModelProvider.Factory
+): BaseAccountFragment(R.layout.fragment_account, viewModelFactory) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        cancelActiveJobs()
         // Restore state after process death
         savedInstanceState?.let { inState ->
             (inState[ACCOUNT_VIEW_STATE_BUNDLE_KEY] as AccountViewState?)?.let { viewState ->
                 viewModel.setViewState(viewState)
             }
         }
-    }
-
-    override fun cancelActiveJobs(){
-        viewModel.cancelActiveJobs()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -58,29 +50,30 @@ constructor(
     }
 
     private fun subscribeObservers(){
-        viewModel.dataState.observe(viewLifecycleOwner, Observer{ dataState ->
-            Timber.d("AccountFragment: DataState: $dataState")
-            stateChangeListener.onDataStateChange(dataState)
-            if(dataState != null){
-                dataState.data?.let { data ->
-                    data.data?.let{ event ->
-                        event.getContentIfNotHandled()?.let{ viewState ->
-                            viewState.accountProperties?.let{ accountProperties ->
-                                Timber.d("AccountFragment, DataState: $accountProperties")
-                                viewModel.setAccountPropertiesData(accountProperties)
-                            }
-                        }
-                    }
-                }
-            }
-        })
 
         viewModel.viewState.observe(viewLifecycleOwner, Observer{ viewState->
-            Timber.d("AccountFragment, ViewState: $viewState")
             if(viewState != null){
                 viewState.accountProperties?.let{
                     setAccountDataFields(it)
                 }
+            }
+        })
+
+        viewModel.numActiveJobs.observe(viewLifecycleOwner, Observer { jobCounter ->
+            uiCommunicationListener.displayProgressBar(viewModel.areAnyJobsActive())
+        })
+
+        viewModel.stateMessage.observe(viewLifecycleOwner, Observer { stateMessage ->
+
+            stateMessage?.let {
+                uiCommunicationListener.onResponseReceived(
+                        response = it.response,
+                        stateMessageCallback = object: StateMessageCallback {
+                            override fun removeMessageFromStack() {
+                                viewModel.clearStateMessage()
+                            }
+                        }
+                )
             }
         })
     }
@@ -91,8 +84,8 @@ constructor(
     }
 
     private fun setAccountDataFields(accountProperties: AccountProperties){
-        email?.text = accountProperties.email
-        username?.text = accountProperties.username
+        email?.setText(accountProperties.email)
+        username?.setText(accountProperties.username)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -108,6 +101,5 @@ constructor(
         }
         return super.onOptionsItemSelected(item)
     }
-
 
 }

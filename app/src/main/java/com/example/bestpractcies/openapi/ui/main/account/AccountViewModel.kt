@@ -1,103 +1,109 @@
 package com.example.bestpractcies.openapi.ui.main.account
 
-import androidx.lifecycle.LiveData
 import com.example.bestpractcies.openapi.models.auth.AccountProperties
-import com.example.bestpractcies.openapi.repository.main.AccountRepository
+import com.example.bestpractcies.openapi.repository.main.AccountRepositoryImpl
 import com.example.bestpractcies.openapi.session.SessionManager
 import com.example.bestpractcies.openapi.ui.BaseViewModel
-import com.example.bestpractcies.openapi.ui.DataState
-import com.example.bestpractcies.openapi.ui.Loading
-import com.example.bestpractcies.openapi.ui.main.account.state.AccountStateEvent
+import com.example.bestpractcies.openapi.util.DataState
+
 import com.example.bestpractcies.openapi.ui.main.account.state.AccountStateEvent.*
 import com.example.bestpractcies.openapi.ui.main.account.state.AccountViewState
-import com.example.bestpractcies.openapi.ui.main.blog.state.BlogViewState
-import com.example.bestpractcies.openapi.util.AbsentLiveData
-import kotlinx.coroutines.InternalCoroutinesApi
 import javax.inject.Inject
 
+import com.example.bestpractcies.openapi.di.main.MainScope
+import com.example.bestpractcies.openapi.util.*
+import com.example.bestpractcies.openapi.util.ErrorHandling.Companion.INVALID_STATE_EVENT
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+
+@ExperimentalCoroutinesApi
+@FlowPreview
+@MainScope
 class AccountViewModel
 @Inject
 constructor(
         val sessionManager: SessionManager,
-        val accountRepository: AccountRepository
-) : BaseViewModel<AccountStateEvent, AccountViewState>() {
+        val accountRepository: AccountRepositoryImpl
+)
+    : BaseViewModel<AccountViewState>()
+{
 
-    @InternalCoroutinesApi
-    override fun handleStateEvent(stateEvent: AccountStateEvent): LiveData<DataState<AccountViewState>> {
-        when(stateEvent) {
-            is GetAccountPropertiesEvent -> {
-                return sessionManager.cachedToken.value?.let { authToken ->
-                    accountRepository.getAccountProperties(authToken)
-                }?: AbsentLiveData.create()
-            }
+    override fun handleNewData(data: AccountViewState) {
+        data.accountProperties?.let { accountProperties ->
+            setAccountPropertiesData(accountProperties)
+        }
+    }
 
-            is UpdateAccountPropertiesEvent -> {
-                return sessionManager.cachedToken.value?.let { authToken ->
-                    authToken.account_pk?.let { pk ->
-                        val newAccountProperties = AccountProperties(
-                                pk,
-                                stateEvent.email,
-                                stateEvent.username
-                        )
+    override fun setStateEvent(stateEvent: StateEvent) {
+        sessionManager.cachedToken.value?.let { authToken ->
+            val job: Flow<DataState<AccountViewState>> = when(stateEvent){
 
-                        accountRepository.saveAccountProperties(
-                                authToken,
-                                newAccountProperties
-                        )
-                    }
-                }?: AbsentLiveData.create()
-            }
-
-            is ChangePasswordEvent ->{
-                return sessionManager.cachedToken.value?.let { authToken ->
-                    accountRepository.updatePassword(
-                            authToken,
-                            stateEvent.currentPassword,
-                            stateEvent.newPassword,
-                            stateEvent.confirmNewPassword
+                is GetAccountPropertiesEvent -> {
+                    accountRepository.getAccountProperties(
+                            stateEvent = stateEvent,
+                            authToken = authToken
                     )
-                }?: AbsentLiveData.create()
-            }
+                }
 
-            is None -> {
-                return object: LiveData<DataState<AccountViewState>>(){
-                    override fun onActive() {
-                        super.onActive()
-                        value = DataState(null, Loading(false), null)
+                is UpdateAccountPropertiesEvent -> {
+                    accountRepository.saveAccountProperties(
+                            stateEvent = stateEvent,
+                            authToken = authToken,
+                            email = stateEvent.email,
+                            username = stateEvent.username
+                    )
+                }
+
+                is ChangePasswordEvent -> {
+                    accountRepository.updatePassword(
+                            stateEvent = stateEvent,
+                            authToken = authToken,
+                            currentPassword = stateEvent.currentPassword,
+                            newPassword = stateEvent.newPassword,
+                            confirmNewPassword = stateEvent.confirmNewPassword
+                    )
+                }
+
+                else -> {
+                    flow{
+                        emit(
+                                DataState.error<AccountViewState>(
+                                        response = Response(
+                                                message = INVALID_STATE_EVENT,
+                                                uiComponentType = UIComponentType.None(),
+                                                messageType = MessageType.Error()
+                                        ),
+                                        stateEvent = stateEvent
+                                )
+                        )
                     }
                 }
             }
+            launchJob(stateEvent, job)
         }
+    }
+
+    fun setAccountPropertiesData(accountProperties: AccountProperties){
+        val update = getCurrentViewStateOrNew()
+        if(update.accountProperties == accountProperties){
+            return
+        }
+        update.accountProperties = accountProperties
+        setViewState(update)
     }
 
     override fun initNewViewState(): AccountViewState {
         return AccountViewState()
     }
 
-    fun setAccountPropertiesData(accountProperties: AccountProperties) {
-        val update = getCurrentViewStateOrNew()
-        if(update.accountProperties == accountProperties) {
-            return
-        }
-        update.accountProperties = accountProperties
-        _viewState.value = update
-    }
-
-    fun logout() {
+    fun logout(){
         sessionManager.logout()
-    }
-
-    fun cancelActiveJobs(){
-        handlePendingData()
-        accountRepository.cancelActiveJobs()
-    }
-
-    private fun handlePendingData(){
-        setStateEvent(None())
     }
 
     override fun onCleared() {
         super.onCleared()
         cancelActiveJobs()
     }
+
 }

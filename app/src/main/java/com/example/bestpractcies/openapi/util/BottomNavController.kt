@@ -1,16 +1,17 @@
 package com.example.bestpractcies.openapi.util
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.os.Parcelable
+import android.util.Log
 import androidx.annotation.IdRes
-import androidx.annotation.NavigationRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
 import com.example.bestpractcies.R
 import com.example.bestpractcies.openapi.fragments.main.account.AccountNavHostFragment
 import com.example.bestpractcies.openapi.fragments.main.blog.BlogNavHostFragment
@@ -32,13 +33,12 @@ class BottomNavController(
     @IdRes val containerId: Int,
     @IdRes val appStartDestinationId: Int,
     val graphChangeListener: OnNavigationGraphChanged?
-    ) {
+) {
+    private val TAG: String = "AppDebug"
     lateinit var navigationBackStack: BackStack
-
     lateinit var activity: Activity
     lateinit var fragmentManager: FragmentManager
     lateinit var navItemChangeListener: OnNavigationItemChanged
-
 
     init {
         if (context is Activity) {
@@ -53,11 +53,12 @@ class BottomNavController(
         }?: BackStack.of(appStartDestinationId)
     }
 
-    fun onNavigationItemSelected(itemId: Int = navigationBackStack.last()): Boolean {
+    fun onNavigationItemSelected(menuItemId: Int = navigationBackStack.last()): Boolean {
 
+        Log.d(TAG, "onNavigationItemSelected ")
         // Replace fragment representing a navigation item
-        val fragment = fragmentManager.findFragmentByTag(itemId.toString())
-            ?: createNavHost(itemId)
+        val fragment = fragmentManager.findFragmentByTag(menuItemId.toString())
+            ?: createNavHost(menuItemId)
         fragmentManager.beginTransaction()
             .setCustomAnimations(
                 R.anim.fade_in,
@@ -65,15 +66,15 @@ class BottomNavController(
                 R.anim.fade_in,
                 R.anim.fade_out
             )
-            .replace(containerId, fragment, itemId.toString())
+            .replace(containerId, fragment, menuItemId.toString())
             .addToBackStack(null)
             .commit()
 
         // Add to back stack
-        navigationBackStack.moveLast(itemId)
+        navigationBackStack.moveLast(menuItemId)
 
         // Update checked icon
-        navItemChangeListener.onItemChanged(itemId)
+        navItemChangeListener.onItemChanged(menuItemId)
 
         // communicate with Activity
         graphChangeListener?.onGraphChange()
@@ -81,8 +82,8 @@ class BottomNavController(
         return true
     }
 
-    private fun createNavHost(menuItemId: Int): Fragment {
-        return when (menuItemId) {
+    private fun createNavHost(menuItemId: Int): Fragment{
+        return when(menuItemId){
 
             R.id.menu_nav_account -> {
                 AccountNavHostFragment.create(R.navigation.nav_account)
@@ -102,43 +103,47 @@ class BottomNavController(
         }
     }
 
-
+    @SuppressLint("RestrictedApi")
     fun onBackPressed() {
-        val childFragmentManager = fragmentManager.findFragmentById(containerId)!!
-            .childFragmentManager
-        when {
-            // We should always try to go back on the child fragment manager stack before going to
-            // the navigation stack. It's important to use the child fragment manager instead of the
-            // NavController because if the user change tabs super fast commit of the
-            // supportFragmentManager may mess up with the NavController child fragment manager back
-            // stack
+        val navController = fragmentManager.findFragmentById(containerId)!!
+            .findNavController()
 
-            childFragmentManager.popBackStackImmediate() -> {
+        when {
+            navController.backStack.size > 2 ->{
+                navController.popBackStack()
             }
+
             // Fragment back stack is empty so try to go back on the navigation stack
             navigationBackStack.size > 1 -> {
+                Log.d(TAG, "logInfo: BNC: backstack size > 1")
+
                 // Remove last item from back stack
                 navigationBackStack.removeLast()
 
                 // Update the container with new fragment
                 onNavigationItemSelected()
-
             }
             // If the stack has only one and it's not the navigation home we should
             // ensure that the application always leave from startDestination
             navigationBackStack.last() != appStartDestinationId -> {
+                Log.d(TAG, "logInfo: BNC: start != current")
                 navigationBackStack.removeLast()
                 navigationBackStack.add(0, appStartDestinationId)
                 onNavigationItemSelected()
             }
             // Navigation stack is empty, so finish the activity
-            else -> activity.finish()
+            else -> {
+                Log.d(TAG, "logInfo: BNC: FINISH")
+                activity.finish()
+            }
         }
     }
 
     @Parcelize
     class BackStack : ArrayList<Int>(), Parcelable {
+
         companion object {
+
             fun of(vararg elements: Int): BackStack {
                 val b = BackStack()
                 b.addAll(elements.toTypedArray())
@@ -152,6 +157,7 @@ class BottomNavController(
             remove(item) // if present, remove
             add(item) // add to end of list
         }
+
     }
 
 
@@ -160,11 +166,7 @@ class BottomNavController(
         fun onItemChanged(itemId: Int)
     }
 
-
-
     // Execute when Navigation Graph changes.
-    // ex: Select a new item on the bottom navigation
-    // ex: Home -> Account
     interface OnNavigationGraphChanged{
         fun onGraphChange()
     }
@@ -192,7 +194,6 @@ fun BottomNavigationView.setUpNavigation(
 
     setOnNavigationItemSelectedListener {
         bottomNavController.onNavigationItemSelected(it.itemId)
-
     }
 
     setOnNavigationItemReselectedListener {
@@ -207,6 +208,7 @@ fun BottomNavigationView.setUpNavigation(
                 fragment
             )
         }
+        bottomNavController.onNavigationItemSelected()
     }
 
     bottomNavController.setOnItemNavigationChanged { itemId ->

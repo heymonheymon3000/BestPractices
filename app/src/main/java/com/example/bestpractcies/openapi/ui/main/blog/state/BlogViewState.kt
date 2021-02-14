@@ -24,27 +24,27 @@ data class BlogViewState (
 
     @Parcelize
     data class BlogFields(
-            var blogList: List<BlogPost> = ArrayList<BlogPost>(),
-            var searchQuery: String = "",
-            var page: Int = 1,
-            var isQueryInProgress: Boolean = false,
-            var isQueryExhausted: Boolean = false,
-            var filter: String = ORDER_BY_ASC_DATE_UPDATED,
-            var order: String = BLOG_ORDER_ASC,
-            var layoutManagerState: Parcelable? = null
+        var blogList: List<BlogPost> = ArrayList<BlogPost>(),
+        var searchQuery: String = "",
+        var page: Int = 1,
+        var isQueryInProgress: Boolean = false,
+        var isQueryExhausted: Boolean = false,
+        var filter: String = ORDER_BY_ASC_DATE_UPDATED,
+        var order: String = BLOG_ORDER_ASC,
+        var layoutManagerState: Parcelable? = null
 
     ): Parcelable
 
     @Parcelize
     data class ViewBlogFields(
-            var blogPost: BlogPost? = null,
-            var isAuthorOfBlogPost: Boolean = false
+        var blogPost: BlogPost? = null,
+        var isAuthorOfBlogPost: Boolean = false
     ): Parcelable
 
     @Parcelize
     data class UpdatedBlogFields(
-            var updatedBlogTitle: String? = null,
-            var updatedBlogBody: String? = null,
-            var updatedImageUri: Uri? = null
+        var updatedBlogTitle: String? = null,
+        var updatedBlogBody: String? = null,
+        var updatedImageUri: Uri? = null
     ): Parcelable
 }

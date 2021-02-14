@@ -2,6 +2,7 @@ package com.example.bestpractcies.openapi.ui.main
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -14,21 +15,21 @@ import com.example.bestpractcies.openapi.models.auth.AUTH_TOKEN_BUNDLE_KEY
 import com.example.bestpractcies.openapi.models.auth.AuthToken
 import com.example.bestpractcies.openapi.ui.BaseActivity
 import com.example.bestpractcies.openapi.ui.auth.AuthActivity
-import com.example.bestpractcies.openapi.ui.main.account.BaseAccountFragment
 import com.example.bestpractcies.openapi.ui.main.account.ChangePasswordFragment
 import com.example.bestpractcies.openapi.ui.main.account.UpdateAccountFragment
-import com.example.bestpractcies.openapi.ui.main.blog.BaseBlogFragment
 import com.example.bestpractcies.openapi.ui.main.blog.UpdateBlogFragment
 import com.example.bestpractcies.openapi.ui.main.blog.ViewBlogFragment
-import com.example.bestpractcies.openapi.ui.main.createblog.BaseCreateBlogFragment
 import com.example.bestpractcies.openapi.util.*
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
-import timber.log.Timber
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import javax.inject.Inject
 import javax.inject.Named
 
+@ExperimentalCoroutinesApi
+@FlowPreview
 class MainActivity : BaseActivity(),
         BottomNavController.OnNavigationGraphChanged,
         BottomNavController.OnNavigationReselectedListener
@@ -46,7 +47,6 @@ class MainActivity : BaseActivity(),
     @Named("CreateBlogFragmentFactory")
     lateinit var createBlogFragmentFactory: FragmentFactory
 
-
     private lateinit var bottomNavigationView: BottomNavigationView
 
     private val bottomNavController by lazy(LazyThreadSafetyMode.NONE) {
@@ -58,36 +58,14 @@ class MainActivity : BaseActivity(),
     }
 
     override fun onGraphChange() {
-        cancelActiveJobs()
         expandAppBar()
-    }
-
-    private fun cancelActiveJobs(){
-        val fragments = bottomNavController.fragmentManager
-                .findFragmentById(bottomNavController.containerId)
-                ?.childFragmentManager
-                ?.fragments
-        if(fragments != null){
-            for(fragment in fragments){
-                if(fragment is BaseAccountFragment){
-                    fragment.cancelActiveJobs()
-                }
-                if(fragment is BaseBlogFragment){
-                    fragment.cancelActiveJobs()
-                }
-                if(fragment is BaseCreateBlogFragment){
-                    fragment.cancelActiveJobs()
-                }
-            }
-        }
-        displayProgressBar(false)
     }
 
     override fun onReselectNavItem(
             navController: NavController,
             fragment: Fragment
     ){
-        Timber.d("logInfo: onReSelectItem")
+        Log.d(TAG, "logInfo: onReSelectItem")
         when(fragment){
 
             is ViewBlogFragment -> {
@@ -113,13 +91,11 @@ class MainActivity : BaseActivity(),
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item?.itemId){
-            android.R.id.home -> {
-                onBackPressed()
-                return true
-            }
+
+        when(item.itemId){
+            android.R.id.home -> onBackPressed()
         }
-        return super.onOptionsItemSelected(item)
+        return item.let { super.onOptionsItemSelected(it) }
     }
 
     override fun inject() {
@@ -135,8 +111,8 @@ class MainActivity : BaseActivity(),
         setupActionBar()
         setupBottomNavigationView(savedInstanceState)
 
-        subscribeObservers()
         restoreSession(savedInstanceState)
+        subscribeObservers()
     }
 
     private fun setupBottomNavigationView(savedInstanceState: Bundle?){
@@ -157,6 +133,7 @@ class MainActivity : BaseActivity(),
 
     private fun restoreSession(savedInstanceState: Bundle?){
         savedInstanceState?.get(AUTH_TOKEN_BUNDLE_KEY)?.let{ authToken ->
+            Log.d(TAG, "restoreSession: Restoring token: $authToken")
             sessionManager.setValue(authToken as AuthToken)
         }
     }
@@ -172,8 +149,9 @@ class MainActivity : BaseActivity(),
     }
 
     fun subscribeObservers(){
+
         sessionManager.cachedToken.observe(this, Observer{ authToken ->
-            Timber.d("MainActivity, subscribeObservers: ViewState: $authToken")
+            Log.d(TAG, "MainActivity, subscribeObservers: ViewState: $authToken")
             if(authToken == null || authToken.account_pk == -1 || authToken.token == null){
                 navAuthActivity()
                 finish()

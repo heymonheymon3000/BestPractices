@@ -13,7 +13,6 @@ import com.example.bestpractcies.openapi.persistence.AppDatabase.Companion.DATAB
 import com.example.bestpractcies.openapi.persistence.auth.AccountPropertiesDao
 import com.example.bestpractcies.openapi.persistence.auth.AuthTokenDao
 import com.example.bestpractcies.openapi.util.Constants
-import com.example.bestpractcies.openapi.util.LiveDataCallAdapterFactory
 import com.example.bestpractcies.openapi.util.PreferenceKeys
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -53,7 +52,6 @@ object AppModule{
     fun provideRetrofitBuilder(gsonBuilder:  Gson): Retrofit.Builder{
         return Retrofit.Builder()
             .baseUrl(Constants.BASE_URL)
-            .addCallAdapterFactory(LiveDataCallAdapterFactory())
             .addConverterFactory(GsonConverterFactory.create(gsonBuilder))
     }
 

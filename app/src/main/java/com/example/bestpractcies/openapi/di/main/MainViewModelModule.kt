@@ -2,7 +2,7 @@ package com.example.bestpractcies.openapi.di.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.bestpractcies.openapi.di.ViewModelKey
+import com.example.bestpractcies.openapi.di.main.keys.MainViewModelKey
 import com.example.bestpractcies.openapi.ui.main.account.AccountViewModel
 import com.example.bestpractcies.openapi.ui.main.blog.viewmodel.BlogViewModel
 import com.example.bestpractcies.openapi.ui.main.createblog.CreateBlogViewModel
@@ -21,18 +21,18 @@ abstract class MainViewModelModule {
     @MainScope
     @Binds
     @IntoMap
-    @ViewModelKey(AccountViewModel::class)
+    @MainViewModelKey(AccountViewModel::class)
     abstract fun bindAccountViewModel(accountViewModel: AccountViewModel): ViewModel
 
     @MainScope
     @Binds
     @IntoMap
-    @ViewModelKey(BlogViewModel::class)
+    @MainViewModelKey(BlogViewModel::class)
     abstract fun bindBlogViewModel(blogViewModel: BlogViewModel): ViewModel
 
     @MainScope
     @Binds
     @IntoMap
-    @ViewModelKey(CreateBlogViewModel::class)
+    @MainViewModelKey(CreateBlogViewModel::class)
     abstract fun bindCreateBlogViewModel(createBlogViewModel: CreateBlogViewModel): ViewModel
 }

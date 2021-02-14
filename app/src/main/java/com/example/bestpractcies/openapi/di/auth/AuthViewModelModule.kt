@@ -2,7 +2,6 @@ package com.example.bestpractcies.openapi.di.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.bestpractcies.openapi.di.ViewModelKey
 import com.example.bestpractcies.openapi.di.auth.keys.AuthViewModelKey
 import com.example.bestpractcies.openapi.ui.auth.AuthViewModel
 import com.example.bestpractcies.openapi.viewModels.AuthViewModelFactory
