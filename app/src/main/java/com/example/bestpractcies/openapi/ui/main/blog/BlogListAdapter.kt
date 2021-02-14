@@ -11,7 +11,6 @@ import com.example.bestpractcies.openapi.models.main.blog.BlogPost
 import com.example.bestpractcies.openapi.util.DateUtils
 import com.example.bestpractcies.openapi.util.GenericViewHolder
 import kotlinx.android.synthetic.main.layout_blog_list_item.view.*
-import timber.log.Timber
 
 class BlogListAdapter(
     private val requestManager: RequestManager,
@@ -54,7 +53,6 @@ class BlogListAdapter(
         when(viewType){
 
             NO_MORE_RESULTS ->{
-                Timber.e("onCreateViewHolder: No more results...")
                 return GenericViewHolder(
                     LayoutInflater.from(parent.context).inflate(
                         R.layout.layout_no_more_results,

@@ -1,5 +1,7 @@
 package com.example.bestpractcies.openapi.api.main.network.responses
 
+import com.example.bestpractcies.openapi.models.main.blog.BlogPost
+import com.example.bestpractcies.openapi.util.DateUtils
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -39,4 +41,18 @@ class BlogCreateUpdateResponse(
 
 
 
-)
+) {
+    fun toBlogPost(): BlogPost {
+        return BlogPost(
+                pk = pk,
+                title = title,
+                slug = slug,
+                body = body,
+                image = image,
+                date_updated = DateUtils.convertServerStringDateToLong(
+                        date_updated
+                ),
+                username = username
+        )
+    }
+}

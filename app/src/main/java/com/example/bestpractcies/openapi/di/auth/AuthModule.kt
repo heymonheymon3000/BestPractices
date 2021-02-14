@@ -5,6 +5,7 @@ import com.example.bestpractcies.openapi.api.auth.OpenApiAuthService
 import com.example.bestpractcies.openapi.persistence.auth.AccountPropertiesDao
 import com.example.bestpractcies.openapi.persistence.auth.AuthTokenDao
 import com.example.bestpractcies.openapi.repository.auth.AuthRepository
+import com.example.bestpractcies.openapi.repository.auth.AuthRepositoryImpl
 import com.example.bestpractcies.openapi.session.SessionManager
 import dagger.Module
 import dagger.Provides
@@ -33,7 +34,7 @@ object AuthModule{
         preferences: SharedPreferences,
         editor: SharedPreferences.Editor
         ): AuthRepository {
-        return AuthRepository(
+        return AuthRepositoryImpl(
             authTokenDao,
             accountPropertiesDao,
             openApiAuthService,

@@ -1,72 +1,80 @@
 package com.example.bestpractcies.openapi.ui.auth
 
-import androidx.lifecycle.LiveData
+import com.example.bestpractcies.openapi.di.auth.AuthScope
 import com.example.bestpractcies.openapi.models.auth.AuthToken
 import com.example.bestpractcies.openapi.repository.auth.AuthRepository
 import com.example.bestpractcies.openapi.ui.BaseViewModel
-import com.example.bestpractcies.openapi.ui.DataState
 import com.example.bestpractcies.openapi.ui.auth.state.*
 import com.example.bestpractcies.openapi.ui.auth.state.AuthStateEvent.*
-import com.example.bestpractcies.openapi.ui.auth.state.LoginFields
-import com.example.bestpractcies.openapi.ui.auth.state.RegistrationFields
-import kotlinx.coroutines.InternalCoroutinesApi
+import com.example.bestpractcies.openapi.util.*
+import com.example.bestpractcies.openapi.util.ErrorHandling.Companion.INVALID_STATE_EVENT
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
+@ExperimentalCoroutinesApi
+@FlowPreview
+@AuthScope
 class AuthViewModel
 @Inject
 constructor(
-        private val authRepository: AuthRepository
-): BaseViewModel<AuthStateEvent, AuthViewState>() {
-    @InternalCoroutinesApi
-    override fun handleStateEvent(stateEvent: AuthStateEvent): LiveData<DataState<AuthViewState>> {
-        return when(stateEvent){
+        val authRepository: AuthRepository
+): BaseViewModel<AuthViewState>()
+{
+
+    override fun handleNewData(data: AuthViewState) {
+        data.authToken?.let { authToken ->
+            setAuthToken(authToken)
+        }
+    }
+
+    override fun setStateEvent(stateEvent: StateEvent) {
+
+        val job: Flow<DataState<AuthViewState>> = when(stateEvent){
+
             is LoginAttemptEvent -> {
                 authRepository.attemptLogin(
-                    stateEvent.email,
-                    stateEvent.password
+                        stateEvent = stateEvent,
+                        email = stateEvent.email,
+                        password = stateEvent.password
                 )
             }
 
             is RegisterAttemptEvent -> {
-                return authRepository.attemptRegistration(
-                    stateEvent.email,
-                    stateEvent.username,
-                    stateEvent.password,
-                    stateEvent.confirm_password
+                authRepository.attemptRegistration(
+                        stateEvent = stateEvent,
+                        email = stateEvent.email,
+                        username = stateEvent.username,
+                        password = stateEvent.password,
+                        confirmPassword = stateEvent.confirm_password
                 )
             }
 
             is CheckPreviousAuthEvent -> {
-                authRepository.checkPreviousAuthUser()
+                authRepository.checkPreviousAuthUser(stateEvent)
             }
 
-            is None ->{
-                return object: LiveData<DataState<AuthViewState>>(){
-                    override fun onActive() {
-                        super.onActive()
-                        value = DataState.data(null, null)
-                    }
+            else -> {
+                flow{
+                    emit(
+                            DataState.error<AuthViewState>(
+                                    response = Response(
+                                            message = INVALID_STATE_EVENT,
+                                            uiComponentType = UIComponentType.None(),
+                                            messageType = MessageType.Error()
+                                    ),
+                                    stateEvent = stateEvent
+                            )
+                    )
                 }
             }
         }
+        launchJob(stateEvent, job)
     }
 
     override fun initNewViewState(): AuthViewState {
         return AuthViewState()
-    }
-
-    fun cancelActiveJobs(){
-        handlePendingData()
-        authRepository.cancelActiveJobs()
-    }
-
-    private fun handlePendingData(){
-        setStateEvent(None())
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        cancelActiveJobs()
     }
 
     fun setRegistrationFields(registrationFields: RegistrationFields){
@@ -95,4 +103,11 @@ constructor(
         update.authToken = authToken
         setViewState(update)
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        cancelActiveJobs()
+    }
+
+
 }

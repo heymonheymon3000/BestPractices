@@ -1,21 +1,61 @@
 package com.example.bestpractcies.openapi.ui.main.blog.state
 
+import com.example.bestpractcies.openapi.util.StateEvent
 import okhttp3.MultipartBody
 
-sealed class BlogStateEvent {
-    class BlogSearchEvent : BlogStateEvent()
+sealed class BlogStateEvent: StateEvent {
 
-    class CheckAuthorOfBlogPost: BlogStateEvent()
+    class BlogSearchEvent(
+            val clearLayoutManagerState: Boolean = true
+    ) : BlogStateEvent() {
+        override fun errorInfo(): String {
+            return "Error searching for blog posts."
+        }
 
-    class DeleteBlogPostEvent: BlogStateEvent()
+        override fun toString(): String {
+            return "BlogSearchEvent"
+        }
+    }
+
+    class CheckAuthorOfBlogPost: BlogStateEvent() {
+        override fun errorInfo(): String {
+            return "Error checking if you are the author of this blog post."
+        }
+
+        override fun toString(): String {
+            return "CheckAuthorOfBlogPost"
+        }
+
+    }
+
+    class DeleteBlogPostEvent: BlogStateEvent() {
+        override fun errorInfo(): String {
+            return "Error deleting that blog post."
+        }
+
+        override fun toString(): String {
+            return "DeleteBlogPostEvent"
+        }
+    }
 
     data class UpdateBlogPostEvent(
             val title: String,
             val body: String,
             val image: MultipartBody.Part?
-    ): BlogStateEvent()
+    ): BlogStateEvent() {
+        override fun errorInfo(): String {
+            return "Error updating that blog post."
+        }
 
-    class RestoreBlogListFromCache: BlogStateEvent()
+        override fun toString(): String {
+            return "UpdateBlogPostEvent"
+        }
 
-    class None: BlogStateEvent()
+    }
+
+    class None: BlogStateEvent() {
+        override fun errorInfo(): String {
+            return "None."
+        }
+    }
 }

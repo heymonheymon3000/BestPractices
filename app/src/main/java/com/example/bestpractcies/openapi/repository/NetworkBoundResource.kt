@@ -1,219 +1,101 @@
 package com.example.bestpractcies.openapi.repository
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import com.example.bestpractcies.openapi.ui.DataState
-import com.example.bestpractcies.openapi.ui.Response
-import com.example.bestpractcies.openapi.ui.ResponseType
 import com.example.bestpractcies.openapi.util.*
-import com.example.bestpractcies.openapi.util.Constants.Companion.NETWORK_TIMEOUT
-import com.example.bestpractcies.openapi.util.Constants.Companion.TESTING_CACHE_DELAY
-import com.example.bestpractcies.openapi.util.Constants.Companion.TESTING_NETWORK_DELAY
-import com.example.bestpractcies.openapi.util.ErrorHandling.Companion.ERROR_CHECK_NETWORK_CONNECTION
-import com.example.bestpractcies.openapi.util.ErrorHandling.Companion.ERROR_UNKNOWN
-import kotlinx.coroutines.*
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
-import timber.log.Timber
+import com.example.bestpractcies.openapi.util.ApiResult.*
+import com.example.bestpractcies.openapi.util.ErrorHandling.Companion.NETWORK_ERROR
+import com.example.bestpractcies.openapi.util.ErrorHandling.Companion.UNKNOWN_ERROR
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
-@InternalCoroutinesApi
-abstract class NetworkBoundResource<ResponseObject, CacheObject, ViewStateType>(
-    isNetworkAvailable: Boolean, //is there a network connection?
-    isNetworkRequest: Boolean, // is this a network request?
-    shouldCancelIfNoInternet: Boolean, // should this job be cancelled if there is no network?
-    shouldLoadFromCache: Boolean // should the cached data be loaded?
-){
-    protected val result = MediatorLiveData<DataState<ViewStateType>>()
-    protected lateinit var job: CompletableJob
-    private lateinit var coroutineScope: CoroutineScope
 
-    init {
-        setJob(initNewJob())
-        setValue(DataState.loading(isLoading = true, cachedData = null))
+@FlowPreview
+abstract class NetworkBoundResource<NetworkObj, CacheObj, ViewState>
+constructor(
+        private val dispatcher: CoroutineDispatcher,
+        private val stateEvent: StateEvent,
+        private val apiCall: suspend () -> NetworkObj?,
+        private val cacheCall: suspend () -> CacheObj?
+)
+{
 
-        if(shouldLoadFromCache){
-            // view cache to start
-            val dbSource = loadFromCache()
-            result.addSource(dbSource){
-                result.removeSource(dbSource)
-                setValue(DataState.loading(isLoading = true, cachedData = it))
-            }
-        }
+    private val TAG: String = "AppDebug"
 
-        if(isNetworkRequest){
-            if(isNetworkAvailable){
-                doNetworkRequest()
-            }
-            else{
-                if(shouldCancelIfNoInternet){
-                    onErrorReturn(
-                            ErrorHandling.UNABLE_TODO_OPERATION_WO_INTERNET,
-                            shouldUseDialog = true,
-                            shouldUseToast = false)
-                }
-                else{
-                    doCacheRequest()
-                }
-            }
-        }
-        else{
-            doCacheRequest()
-        }
-    }
+    val result: Flow<DataState<ViewState>> = flow {
 
-    private fun doCacheRequest(){
-        coroutineScope.launch {
-            delay(TESTING_CACHE_DELAY)
-            // View data from cache only and return
-            createCacheRequestAndReturn()
-        }
-    }
+        // ****** STEP 1: VIEW CACHE ******
+        emit(returnCache(markJobComplete = false))
 
-    private fun doNetworkRequest() {
-        coroutineScope.launch {
+        // ****** STEP 2: MAKE NETWORK CALL, SAVE RESULT TO CACHE ******
+        val apiResult =
+            safeApiCall(dispatcher){apiCall.invoke()}
 
-            // simulate a network delay for testing
-            delay(TESTING_NETWORK_DELAY)
-
-            withContext(Main) {
-
-                // make network call
-                val apiResponse = createCall()
-                result.addSource(apiResponse) { response ->
-                    result.removeSource(apiResponse)
-
-                    coroutineScope.launch {
-                        handleNetworkCall(response)
-                    }
-                }
-            }
-        }
-
-        GlobalScope.launch(IO) {
-            delay(NETWORK_TIMEOUT)
-
-            if (!job.isCompleted) {
-                Timber.e("NetworkBoundResource: JOB NETWORK TIMEOUT.")
-                job.cancel(CancellationException(ErrorHandling.UNABLE_TO_RESOLVE_HOST))
-            }
-        }
-    }
-
-    private suspend fun handleNetworkCall(response: GenericApiResponse<ResponseObject>?) {
-        when(response){
-            is ApiSuccessResponse ->{
-                handleApiSuccessResponse(response)
-            }
-
-            is ApiErrorResponse ->{
-                Timber.e("NetworkBoundResource: ${response.errorMessage}" )
-                onErrorReturn(response.errorMessage,
-                    shouldUseDialog = true,
-                    shouldUseToast = false)
-            }
-
-            is ApiEmptyResponse ->{
-                Timber.e("NetworkBoundResource: Request returned NOTHING (HTTP 204)" )
-                onErrorReturn("HTTP 204. Returned nothing.",
-                    shouldUseDialog = true,
-                    shouldUseToast = false
+        when(apiResult){
+            is GenericError -> {
+                emit(
+                        buildError<ViewState>(
+                                apiResult.errorMessage?.let { it }?: UNKNOWN_ERROR,
+                                UIComponentType.Dialog(),
+                                stateEvent
+                        )
                 )
             }
-        }
-    }
 
-    fun onCompleteJob(dataState: DataState<ViewStateType>){
-        GlobalScope.launch(Main){
-            job.complete()
-            setValue(dataState)
-        }
-    }
-
-    private fun setValue(dataState: DataState<ViewStateType>) {
-        result.value = dataState
-    }
-
-    fun onErrorReturn(errorMessage: String?, shouldUseDialog: Boolean, shouldUseToast: Boolean){
-        var msg = errorMessage
-        var useDialog = shouldUseDialog
-        var responseType: ResponseType = ResponseType.None()
-        if(msg == null){
-            msg = ERROR_UNKNOWN
-        }
-        else if(ErrorHandling.isNetworkError(msg)){
-            msg = ERROR_CHECK_NETWORK_CONNECTION
-            useDialog = false
-        }
-        if(shouldUseToast){
-            responseType = ResponseType.Toast()
-        }
-        if(useDialog){
-            responseType = ResponseType.Dialog()
-        }
-
-        onCompleteJob(DataState.error(
-            response = Response(
-                message = msg,
-                responseType = responseType
-            )
-        ))
-    }
-
-    @InternalCoroutinesApi
-    private fun initNewJob(): Job {
-        Timber.d("initNewJob: called...")
-        job = Job()
-        job.invokeOnCompletion(
-                onCancelling = true,
-                invokeImmediately = true,
-                handler = object : CompletionHandler{
-            override fun invoke(cause: Throwable?) {
-                if(job.isCancelled){
-                    Timber.e("NetworkBoundResource: Job has been cancelled." )
-                    cause?.let{
-                        onErrorReturn(it.message, shouldUseDialog = false, shouldUseToast = true)
-                    }?: onErrorReturn(ERROR_UNKNOWN, shouldUseDialog = false, shouldUseToast = true)
-                }
-                else if(job.isCompleted){
-                    Timber.e("NetworkBoundResource: Job has been completed...")
-                    // Do nothing. Should be handled already.
-                }
+            is NetworkError -> {
+                emit(
+                        buildError<ViewState>(
+                                NETWORK_ERROR,
+                                UIComponentType.Dialog(),
+                                stateEvent
+                        )
+                )
             }
 
-        })
-        coroutineScope = CoroutineScope(IO + job)
-        return job
+            is Success -> {
+                if(apiResult.value == null){
+                    emit(
+                            buildError<ViewState>(
+                                    UNKNOWN_ERROR,
+                                    UIComponentType.Dialog(),
+                                    stateEvent
+                            )
+                    )
+                }
+                else{
+                    updateCache(apiResult.value as NetworkObj)
+                }
+            }
+        }
+
+        // ****** STEP 3: VIEW CACHE and MARK JOB COMPLETED ******
+        emit(returnCache(markJobComplete = true))
     }
 
-    fun asLiveData() = result as LiveData<DataState<ViewStateType>>
+    private suspend fun returnCache(markJobComplete: Boolean): DataState<ViewState> {
 
-    abstract suspend fun createCacheRequestAndReturn()
+        val cacheResult = safeCacheCall(dispatcher){cacheCall.invoke()}
 
-    abstract suspend fun handleApiSuccessResponse(response: ApiSuccessResponse<ResponseObject>)
+        var jobCompleteMarker: StateEvent? = null
+        if(markJobComplete){
+            jobCompleteMarker = stateEvent
+        }
 
-    abstract fun createCall(): LiveData<GenericApiResponse<ResponseObject>>
+        return object: CacheResponseHandler<ViewState, CacheObj>(
+                response = cacheResult,
+                stateEvent = jobCompleteMarker
+        ) {
+            override suspend fun handleSuccess(resultObj: CacheObj): DataState<ViewState> {
+                return handleCacheSuccess(resultObj)
+            }
+        }.getResult()
 
-    abstract fun loadFromCache(): LiveData<ViewStateType>
+    }
 
-    abstract suspend fun updateLocalDb(cacheObject: CacheObject?)
+    abstract suspend fun updateCache(networkObject: NetworkObj)
 
-    abstract fun setJob(job: Job)
+    abstract fun handleCacheSuccess(resultObj: CacheObj): DataState<ViewState> // make sure to return null for stateEvent
+
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
