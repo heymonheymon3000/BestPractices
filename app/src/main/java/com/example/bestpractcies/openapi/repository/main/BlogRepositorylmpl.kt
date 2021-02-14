@@ -34,38 +34,38 @@ import javax.inject.Inject
 class BlogRepositoryImpl
 @Inject
 constructor(
-        val openApiMainService: OpenApiMainService,
-        val blogPostDao: BlogPostDao,
-        val sessionManager: SessionManager
+    val openApiMainService: OpenApiMainService,
+    val blogPostDao: BlogPostDao,
+    val sessionManager: SessionManager
 ): BlogRepository
 {
 
     private val TAG: String = "AppDebug"
     override fun searchBlogPosts(
-            authToken: AuthToken,
-            query: String,
-            filterAndOrder: String,
-            page: Int,
-            stateEvent: StateEvent
+        authToken: AuthToken,
+        query: String,
+        filterAndOrder: String,
+        page: Int,
+        stateEvent: StateEvent
     ): Flow<DataState<BlogViewState>> {
         return object: NetworkBoundResource<BlogListSearchResponse, List<BlogPost>, BlogViewState>(
-                dispatcher = IO,
-                stateEvent = stateEvent,
-                apiCall = {
-                    openApiMainService.searchListBlogPosts(
-                            "Token ${authToken.token!!}",
-                            query = query,
-                            ordering = filterAndOrder,
-                            page = page
-                    )
-                },
-                cacheCall = {
-                    blogPostDao.returnOrderedBlogQuery(
-                            query = query,
-                            filterAndOrder = filterAndOrder,
-                            page = page
-                    )
-                }
+            dispatcher = IO,
+            stateEvent = stateEvent,
+            apiCall = {
+                openApiMainService.searchListBlogPosts(
+                    "Token ${authToken.token!!}",
+                    query = query,
+                    ordering = filterAndOrder,
+                    page = page
+                )
+            },
+            cacheCall = {
+                blogPostDao.returnOrderedBlogQuery(
+                    query = query,
+                    filterAndOrder = filterAndOrder,
+                    page = page
+                )
+            }
         ){
             override suspend fun updateCache(networkObject: BlogListSearchResponse) {
                 val blogPostList = networkObject.toList()
@@ -89,14 +89,14 @@ constructor(
 
             override fun handleCacheSuccess(resultObj: List<BlogPost>): DataState<BlogViewState> {
                 val viewState = BlogViewState(
-                        blogFields = BlogFields(
-                                blogList = resultObj
-                        )
+                    blogFields = BlogFields(
+                        blogList = resultObj
+                    )
                 )
                 return DataState.data(
-                        response = null,
-                        data = viewState,
-                        stateEvent = stateEvent
+                    response = null,
+                    data = viewState,
+                    stateEvent = stateEvent
                 )
             }
 
@@ -104,156 +104,156 @@ constructor(
     }
 
     override fun isAuthorOfBlogPost(
-            authToken: AuthToken,
-            slug: String,
-            stateEvent: StateEvent
+        authToken: AuthToken,
+        slug: String,
+        stateEvent: StateEvent
     ) = flow {
         val apiResult = safeApiCall(IO){
             openApiMainService.isAuthorOfBlogPost(
-                    "Token ${authToken.token!!}",
-                    slug
+                "Token ${authToken.token!!}",
+                slug
             )
         }
         emit(
-                object: ApiResponseHandler<BlogViewState, GenericResponse>(
-                        response = apiResult,
-                        stateEvent = stateEvent
-                ){
-                    override suspend fun handleSuccess(resultObj: GenericResponse): DataState<BlogViewState> {
-                        val viewState = BlogViewState(
-                                viewBlogFields = ViewBlogFields(
-                                        isAuthorOfBlogPost = false
-                                )
+            object: ApiResponseHandler<BlogViewState, GenericResponse>(
+                response = apiResult,
+                stateEvent = stateEvent
+            ){
+                override suspend fun handleSuccess(resultObj: GenericResponse): DataState<BlogViewState> {
+                    val viewState = BlogViewState(
+                        viewBlogFields = ViewBlogFields(
+                            isAuthorOfBlogPost = false
                         )
-                        return when {
+                    )
+                    return when {
 
-                            resultObj.response.equals(RESPONSE_NO_PERMISSION_TO_EDIT) -> {
-                                DataState.data(
-                                        response = null,
-                                        data = viewState,
-                                        stateEvent = stateEvent
-                                )
-                            }
+                        resultObj.response.equals(RESPONSE_NO_PERMISSION_TO_EDIT) -> {
+                            DataState.data(
+                                response = null,
+                                data = viewState,
+                                stateEvent = stateEvent
+                            )
+                        }
 
-                            resultObj.response.equals(RESPONSE_HAS_PERMISSION_TO_EDIT) -> {
-                                viewState.viewBlogFields.isAuthorOfBlogPost = true
-                                DataState.data(
-                                        response = null,
-                                        data = viewState,
-                                        stateEvent = stateEvent
-                                )
-                            }
+                        resultObj.response.equals(RESPONSE_HAS_PERMISSION_TO_EDIT) -> {
+                            viewState.viewBlogFields.isAuthorOfBlogPost = true
+                            DataState.data(
+                                response = null,
+                                data = viewState,
+                                stateEvent = stateEvent
+                            )
+                        }
 
-                            else -> {
-                                buildError(
-                                        ERROR_UNKNOWN,
-                                        UIComponentType.None(),
-                                        stateEvent
-                                )
-                            }
+                        else -> {
+                            buildError(
+                                ERROR_UNKNOWN,
+                                UIComponentType.None(),
+                                stateEvent
+                            )
                         }
                     }
-                }.getResult()
+                }
+            }.getResult()
         )
     }
 
     override fun deleteBlogPost(
-            authToken: AuthToken,
-            blogPost: BlogPost,
-            stateEvent: StateEvent
+        authToken: AuthToken,
+        blogPost: BlogPost,
+        stateEvent: StateEvent
     ) =  flow {
         val apiResult = safeApiCall(IO){
             openApiMainService.deleteBlogPost(
-                    "Token ${authToken.token!!}",
-                    blogPost.slug
+                "Token ${authToken.token!!}",
+                blogPost.slug
             )
         }
         emit(
-                object: ApiResponseHandler<BlogViewState, GenericResponse>(
-                        response = apiResult,
-                        stateEvent = stateEvent
-                ){
-                    override suspend fun handleSuccess(resultObj: GenericResponse): DataState<BlogViewState> {
+            object: ApiResponseHandler<BlogViewState, GenericResponse>(
+                response = apiResult,
+                stateEvent = stateEvent
+            ){
+                override suspend fun handleSuccess(resultObj: GenericResponse): DataState<BlogViewState> {
 
-                        if(resultObj.response == SUCCESS_BLOG_DELETED){
-                            blogPostDao.deleteBlogPost(blogPost)
-                            return DataState.data(
-                                    response = Response(
-                                            message = SUCCESS_BLOG_DELETED,
-                                            uiComponentType = UIComponentType.Toast(),
-                                            messageType = MessageType.Success()
-                                    ),
-                                    stateEvent = stateEvent
-                            )
-                        }
-                        else{
-                            return buildError(
-                                    ERROR_UNKNOWN,
-                                    UIComponentType.Dialog(),
-                                    stateEvent
-                            )
-                        }
+                    if(resultObj.response == SUCCESS_BLOG_DELETED){
+                        blogPostDao.deleteBlogPost(blogPost)
+                        return DataState.data(
+                            response = Response(
+                                message = SUCCESS_BLOG_DELETED,
+                                uiComponentType = UIComponentType.Toast(),
+                                messageType = MessageType.Success()
+                            ),
+                            stateEvent = stateEvent
+                        )
                     }
-                }.getResult()
+                    else{
+                        return buildError(
+                            ERROR_UNKNOWN,
+                            UIComponentType.Dialog(),
+                            stateEvent
+                        )
+                    }
+                }
+            }.getResult()
         )
     }
 
     override fun updateBlogPost(
-            authToken: AuthToken,
-            slug: String,
-            title: RequestBody,
-            body: RequestBody,
-            image: MultipartBody.Part?,
-            stateEvent: StateEvent
+        authToken: AuthToken,
+        slug: String,
+        title: RequestBody,
+        body: RequestBody,
+        image: MultipartBody.Part?,
+        stateEvent: StateEvent
     ) = flow{
 
         val apiResult = safeApiCall(IO){
             openApiMainService.updateBlog(
-                    "Token ${authToken.token!!}",
-                    slug,
-                    title,
-                    body,
-                    image
+                "Token ${authToken.token!!}",
+                slug,
+                title,
+                body,
+                image
             )
         }
         emit(
-                object: ApiResponseHandler<BlogViewState, BlogCreateUpdateResponse>(
-                        response = apiResult,
+            object: ApiResponseHandler<BlogViewState, BlogCreateUpdateResponse>(
+                response = apiResult,
+                stateEvent = stateEvent
+            ){
+                override suspend fun handleSuccess(resultObj: BlogCreateUpdateResponse): DataState<BlogViewState> {
+
+                    val updatedBlogPost = resultObj.toBlogPost()
+
+                    blogPostDao.updateBlogPost(
+                        updatedBlogPost.pk,
+                        updatedBlogPost.title,
+                        updatedBlogPost.body,
+                        updatedBlogPost.image
+                    )
+
+                    return DataState.data(
+                        response = Response(
+                            message = resultObj.response,
+                            uiComponentType = UIComponentType.Toast(),
+                            messageType = MessageType.Success()
+                        ),
+                        data =  BlogViewState(
+                            viewBlogFields = ViewBlogFields(
+                                blogPost = updatedBlogPost
+                            ),
+                            updatedBlogFields = UpdatedBlogFields(
+                                updatedBlogTitle = updatedBlogPost.title,
+                                updatedBlogBody = updatedBlogPost.body,
+                                updatedImageUri = null
+                            )
+                        ),
                         stateEvent = stateEvent
-                ){
-                    override suspend fun handleSuccess(resultObj: BlogCreateUpdateResponse): DataState<BlogViewState> {
+                    )
 
-                        val updatedBlogPost = resultObj.toBlogPost()
+                }
 
-                        blogPostDao.updateBlogPost(
-                                updatedBlogPost.pk,
-                                updatedBlogPost.title,
-                                updatedBlogPost.body,
-                                updatedBlogPost.image
-                        )
-
-                        return DataState.data(
-                                response = Response(
-                                        message = resultObj.response,
-                                        uiComponentType = UIComponentType.Toast(),
-                                        messageType = MessageType.Success()
-                                ),
-                                data =  BlogViewState(
-                                        viewBlogFields = ViewBlogFields(
-                                                blogPost = updatedBlogPost
-                                        ),
-                                        updatedBlogFields = UpdatedBlogFields(
-                                                updatedBlogTitle = updatedBlogPost.title,
-                                                updatedBlogBody = updatedBlogPost.body,
-                                                updatedImageUri = null
-                                        )
-                                ),
-                                stateEvent = stateEvent
-                        )
-
-                    }
-
-                }.getResult()
+            }.getResult()
         )
     }
 

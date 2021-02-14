@@ -49,11 +49,11 @@ import javax.inject.Inject
 class BlogFragment
 @Inject
 constructor(
-        viewModelFactory: ViewModelProvider.Factory,
-        private val requestOptions: RequestOptions
+    viewModelFactory: ViewModelProvider.Factory,
+    private val requestOptions: RequestOptions
 ): BaseBlogFragment(R.layout.fragment_blog, viewModelFactory),
-        BlogListAdapter.Interaction,
-        SwipeRefreshLayout.OnRefreshListener
+    BlogListAdapter.Interaction,
+    SwipeRefreshLayout.OnRefreshListener
 {
 
     private lateinit var searchView: SearchView
@@ -84,8 +84,8 @@ constructor(
         viewState?.blogFields?.blogList = ArrayList()
 
         outState.putParcelable(
-                BLOG_VIEW_STATE_BUNDLE_KEY,
-                viewState
+            BLOG_VIEW_STATE_BUNDLE_KEY,
+            viewState
         )
         super.onSaveInstanceState(outState)
     }
@@ -124,14 +124,14 @@ constructor(
                 recyclerAdapter.apply {
                     viewState.blogFields.blogList?.let {
                         preloadGlideImages(
-                                requestManager = requestManager as RequestManager,
-                                list = it
+                            requestManager = requestManager as RequestManager,
+                            list = it
                         )
                     }
 
                     submitList(
-                            blogList = viewState.blogFields.blogList,
-                            isQueryExhausted = viewState.blogFields.isQueryExhausted?: true
+                        blogList = viewState.blogFields.blogList,
+                        isQueryExhausted = viewState.blogFields.isQueryExhausted?: true
                     )
                 }
 
@@ -150,12 +150,12 @@ constructor(
                     viewModel.clearStateMessage()
                 }else{
                     uiCommunicationListener.onResponseReceived(
-                            response = it.response,
-                            stateMessageCallback = object: StateMessageCallback {
-                                override fun removeMessageFromStack() {
-                                    viewModel.clearStateMessage()
-                                }
+                        response = it.response,
+                        stateMessageCallback = object: StateMessageCallback {
+                            override fun removeMessageFromStack() {
+                                viewModel.clearStateMessage()
                             }
+                        }
                     )
                 }
             }
@@ -177,7 +177,7 @@ constructor(
         searchPlate.setOnEditorActionListener { v, actionId, event ->
 
             if (actionId == EditorInfo.IME_ACTION_UNSPECIFIED
-                    || actionId == EditorInfo.IME_ACTION_SEARCH ) {
+                || actionId == EditorInfo.IME_ACTION_SEARCH ) {
                 val searchQuery = v.text.toString()
                 Log.e(TAG, "SearchView: (keyboard or arrow) executing search...: ${searchQuery}")
                 viewModel.setQuery(searchQuery).let{
@@ -220,8 +220,8 @@ constructor(
             addItemDecoration(topSpacingDecorator)
 
             recyclerAdapter = BlogListAdapter(
-                    requestManager as RequestManager,
-                    this@BlogFragment
+                requestManager as RequestManager,
+                this@BlogFragment
             )
             addOnScrollListener(object: RecyclerView.OnScrollListener(){
 
@@ -241,12 +241,12 @@ constructor(
 
     private fun setupGlide(){
         val requestOptions = RequestOptions
-                .placeholderOf(R.drawable.default_image)
-                .error(R.drawable.default_image)
+            .placeholderOf(R.drawable.default_image)
+            .error(R.drawable.default_image)
 
         activity?.let {
             requestManager = Glide.with(it)
-                    .applyDefaultRequestOptions(requestOptions)
+                .applyDefaultRequestOptions(requestOptions)
         }
     }
 
@@ -294,8 +294,8 @@ constructor(
 
         activity?.let {
             val dialog = MaterialDialog(it)
-                    .noAutoDismiss()
-                    .customView(R.layout.layout_blog_filter)
+                .noAutoDismiss()
+                .customView(R.layout.layout_blog_filter)
 
             val view = dialog.getCustomView()
 
@@ -320,17 +320,17 @@ constructor(
                 Log.d(TAG, "FilterDialog: apply filter.")
 
                 val newFilter =
-                        when (view.findViewById<RadioGroup>(R.id.filter_group).checkedRadioButtonId) {
-                            R.id.filter_author -> BLOG_FILTER_USERNAME
-                            R.id.filter_date -> BLOG_FILTER_DATE_UPDATED
-                            else -> BLOG_FILTER_DATE_UPDATED
-                        }
+                    when (view.findViewById<RadioGroup>(R.id.filter_group).checkedRadioButtonId) {
+                        R.id.filter_author -> BLOG_FILTER_USERNAME
+                        R.id.filter_date -> BLOG_FILTER_DATE_UPDATED
+                        else -> BLOG_FILTER_DATE_UPDATED
+                    }
 
                 val newOrder =
-                        when (view.findViewById<RadioGroup>(R.id.order_group).checkedRadioButtonId) {
-                            R.id.filter_desc -> "-"
-                            else -> ""
-                        }
+                    when (view.findViewById<RadioGroup>(R.id.order_group).checkedRadioButtonId) {
+                        R.id.filter_desc -> "-"
+                        else -> ""
+                    }
 
                 viewModel.apply {
                     saveFilterOptions(newFilter, newOrder)
@@ -355,3 +355,11 @@ constructor(
 
 
 }
+
+
+
+
+
+
+
+

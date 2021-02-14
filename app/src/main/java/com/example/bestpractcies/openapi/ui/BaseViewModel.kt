@@ -86,3 +86,11 @@ abstract class BaseViewModel<ViewState> : ViewModel()
     abstract fun initNewViewState(): ViewState
 
 }
+
+
+
+
+
+
+
+

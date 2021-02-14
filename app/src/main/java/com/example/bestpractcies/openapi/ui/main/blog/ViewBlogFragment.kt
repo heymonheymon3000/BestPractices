@@ -27,8 +27,8 @@ import javax.inject.Inject
 class ViewBlogFragment
 @Inject
 constructor(
-        viewModelFactory: ViewModelProvider.Factory,
-        private val requestManager: RequestManager
+    viewModelFactory: ViewModelProvider.Factory,
+    private val requestManager: RequestManager
 ): BaseBlogFragment(R.layout.fragment_view_blog, viewModelFactory)
 {
 
@@ -53,8 +53,8 @@ constructor(
         viewState?.blogFields?.blogList = ArrayList()
 
         outState.putParcelable(
-                BLOG_VIEW_STATE_BUNDLE_KEY,
-                viewState
+            BLOG_VIEW_STATE_BUNDLE_KEY,
+            viewState
         )
         super.onSaveInstanceState(outState)
     }
@@ -84,26 +84,26 @@ constructor(
             }
         }
         uiCommunicationListener.onResponseReceived(
-                response = Response(
-                        message = getString(R.string.are_you_sure_delete),
-                        uiComponentType = UIComponentType.AreYouSureDialog(callback),
-                        messageType = MessageType.Info()
-                ),
-                stateMessageCallback = object: StateMessageCallback {
-                    override fun removeMessageFromStack() {
-                        viewModel.clearStateMessage()
-                    }
+            response = Response(
+                message = getString(R.string.are_you_sure_delete),
+                uiComponentType = UIComponentType.AreYouSureDialog(callback),
+                messageType = MessageType.Info()
+            ),
+            stateMessageCallback = object: StateMessageCallback{
+                override fun removeMessageFromStack() {
+                    viewModel.clearStateMessage()
                 }
+            }
         )
     }
 
     fun deleteBlogPost(){
         viewModel.setStateEvent(
-                DeleteBlogPostEvent()
+            DeleteBlogPostEvent()
         )
     }
 
-    private fun checkIsAuthorOfBlogPost(){
+    fun checkIsAuthorOfBlogPost(){
         viewModel.setIsAuthorOfBlogPost(false) // reset
         viewModel.setStateEvent(CheckAuthorOfBlogPost())
     }
@@ -115,7 +115,7 @@ constructor(
                 setBlogProperties(blogPost)
             }
 
-            if(viewState.viewBlogFields.isAuthorOfBlogPost){
+            if(viewState.viewBlogFields.isAuthorOfBlogPost == true){
                 adaptViewToAuthorMode()
             }
         })
@@ -133,26 +133,26 @@ constructor(
 
             stateMessage?.let {
                 uiCommunicationListener.onResponseReceived(
-                        response = it.response,
-                        stateMessageCallback = object: StateMessageCallback {
-                            override fun removeMessageFromStack() {
-                                viewModel.clearStateMessage()
-                            }
+                    response = it.response,
+                    stateMessageCallback = object: StateMessageCallback {
+                        override fun removeMessageFromStack() {
+                            viewModel.clearStateMessage()
                         }
+                    }
                 )
             }
         })
     }
 
-    private fun adaptViewToAuthorMode(){
+    fun adaptViewToAuthorMode(){
         activity?.invalidateOptionsMenu()
         delete_button.visibility = View.VISIBLE
     }
 
     fun setBlogProperties(blogPost: BlogPost){
         requestManager
-                .load(blogPost.image)
-                .into(blog_image)
+            .load(blogPost.image)
+            .into(blog_image)
         blog_title.setText(blogPost.title)
         blog_author.setText(blogPost.username)
         blog_update_date.setText(DateUtils.convertLongToStringDate(blogPost.date_updated))
@@ -190,3 +190,4 @@ constructor(
         }
     }
 }
+

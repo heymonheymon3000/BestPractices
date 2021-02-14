@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
+
 @FlowPreview
 @ExperimentalCoroutinesApi
 abstract class DataChannelManager<ViewState> {
@@ -33,26 +34,26 @@ abstract class DataChannelManager<ViewState> {
     abstract fun handleNewData(data: ViewState)
 
     fun launchJob(
-            stateEvent: StateEvent,
-            jobFunction: Flow<DataState<ViewState>?>
+        stateEvent: StateEvent,
+        jobFunction: Flow<DataState<ViewState>?>
     ){
         if(!isStateEventActive(stateEvent) && messageStack.size == 0){
             addStateEvent(stateEvent)
             jobFunction
-                    .onEach{ dataState ->
-                        withContext(Main){
-                            dataState?.data?.let { data ->
-                                handleNewData(data)
-                            }
-                            dataState?.stateMessage?.let { stateMessage ->
-                                handleNewStateMessage(stateMessage)
-                            }
-                            dataState?.stateEvent?.let { stateEvent ->
-                                removeStateEvent(stateEvent)
-                            }
+                .onEach{ dataState ->
+                    withContext(Main){
+                        dataState?.data?.let { data ->
+                            handleNewData(data)
+                        }
+                        dataState?.stateMessage?.let { stateMessage ->
+                            handleNewStateMessage(stateMessage)
+                        }
+                        dataState?.stateEvent?.let { stateEvent ->
+                            removeStateEvent(stateEvent)
                         }
                     }
-                    .launchIn(getChannelScope())
+                }
+                .launchIn(getChannelScope())
         }
     }
 
@@ -114,25 +115,3 @@ abstract class DataChannelManager<ViewState> {
         _numActiveJobs.value = _activeStateEvents.size
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
