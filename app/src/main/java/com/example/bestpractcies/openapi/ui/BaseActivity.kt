@@ -22,7 +22,7 @@ import com.example.bestpractcies.openapi.util.UIComponentType
 import javax.inject.Inject
 
 abstract class BaseActivity: AppCompatActivity(),
-        UICommunicationListener
+    UICommunicationListener
 {
 
     val TAG: String = "AppDebug"
@@ -36,13 +36,13 @@ abstract class BaseActivity: AppCompatActivity(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         (application as BaseApplication).appComponent
-                .inject(this)
+            .inject(this)
         super.onCreate(savedInstanceState)
     }
 
     override fun onResponseReceived(
-            response: Response,
-            stateMessageCallback: StateMessageCallback
+        response: Response,
+        stateMessageCallback: StateMessageCallback
     ) {
 
         when(response.uiComponentType){
@@ -51,9 +51,9 @@ abstract class BaseActivity: AppCompatActivity(),
 
                 response.message?.let {
                     areYouSureDialog(
-                            message = it,
-                            callback = response.uiComponentType.callback,
-                            stateMessageCallback = stateMessageCallback
+                        message = it,
+                        callback = response.uiComponentType.callback,
+                        stateMessageCallback = stateMessageCallback
                     )
                 }
             }
@@ -61,16 +61,16 @@ abstract class BaseActivity: AppCompatActivity(),
             is UIComponentType.Toast -> {
                 response.message?.let {
                     displayToast(
-                            message = it,
-                            stateMessageCallback = stateMessageCallback
+                        message = it,
+                        stateMessageCallback = stateMessageCallback
                     )
                 }
             }
 
             is UIComponentType.Dialog -> {
                 displayDialog(
-                        response = response,
-                        stateMessageCallback = stateMessageCallback
+                    response = response,
+                    stateMessageCallback = stateMessageCallback
                 )
             }
 
@@ -84,8 +84,8 @@ abstract class BaseActivity: AppCompatActivity(),
     }
 
     private fun displayDialog(
-            response: Response,
-            stateMessageCallback: StateMessageCallback
+        response: Response,
+        stateMessageCallback: StateMessageCallback
     ){
         Log.d(TAG, "displayDialog: ")
         response.message?.let { message ->
@@ -94,22 +94,22 @@ abstract class BaseActivity: AppCompatActivity(),
 
                 is MessageType.Error -> {
                     displayErrorDialog(
-                            message = message,
-                            stateMessageCallback = stateMessageCallback
+                        message = message,
+                        stateMessageCallback = stateMessageCallback
                     )
                 }
 
                 is MessageType.Success -> {
                     displaySuccessDialog(
-                            message = message,
-                            stateMessageCallback = stateMessageCallback
+                        message = message,
+                        stateMessageCallback = stateMessageCallback
                     )
                 }
 
                 is MessageType.Info -> {
                     displayInfoDialog(
-                            message = message,
-                            stateMessageCallback = stateMessageCallback
+                        message = message,
+                        stateMessageCallback = stateMessageCallback
                     )
                 }
 
@@ -127,28 +127,28 @@ abstract class BaseActivity: AppCompatActivity(),
     override fun hideSoftKeyboard() {
         if (currentFocus != null) {
             val inputMethodManager = getSystemService(
-                    Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                Context.INPUT_METHOD_SERVICE) as InputMethodManager
             inputMethodManager
-                    .hideSoftInputFromWindow(currentFocus!!.windowToken, 0)
+                .hideSoftInputFromWindow(currentFocus!!.windowToken, 0)
         }
     }
 
     override fun isStoragePermissionGranted(): Boolean{
         if (
-                ContextCompat.checkSelfPermission(this,
-                        Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED  ) {
+            ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED  ) {
 
 
             ActivityCompat.requestPermissions(this,
-                    arrayOf(
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ),
-                    PERMISSIONS_REQUEST_READ_STORAGE
+                arrayOf(
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ),
+                PERMISSIONS_REQUEST_READ_STORAGE
             )
 
             return false
@@ -167,85 +167,85 @@ abstract class BaseActivity: AppCompatActivity(),
     }
 
     private fun displaySuccessDialog(
-            message: String?,
-            stateMessageCallback: StateMessageCallback
+        message: String?,
+        stateMessageCallback: StateMessageCallback
     ): MaterialDialog {
         return MaterialDialog(this)
-                .show{
-                    title(R.string.text_success)
-                    message(text = message)
-                    positiveButton(R.string.text_ok){
-                        stateMessageCallback.removeMessageFromStack()
-                        dismiss()
-                    }
-                    onDismiss {
-                        dialogInView = null
-                    }
-                    cancelable(false)
+            .show{
+                title(R.string.text_success)
+                message(text = message)
+                positiveButton(R.string.text_ok){
+                    stateMessageCallback.removeMessageFromStack()
+                    dismiss()
                 }
+                onDismiss {
+                    dialogInView = null
+                }
+                cancelable(false)
+            }
     }
 
     private fun displayErrorDialog(
-            message: String?,
-            stateMessageCallback: StateMessageCallback
+        message: String?,
+        stateMessageCallback: StateMessageCallback
     ): MaterialDialog {
         return MaterialDialog(this)
-                .show{
-                    title(R.string.text_error)
-                    message(text = message)
-                    positiveButton(R.string.text_ok){
-                        stateMessageCallback.removeMessageFromStack()
-                        dismiss()
-                    }
-                    onDismiss {
-                        dialogInView = null
-                    }
-                    cancelable(false)
+            .show{
+                title(R.string.text_error)
+                message(text = message)
+                positiveButton(R.string.text_ok){
+                    stateMessageCallback.removeMessageFromStack()
+                    dismiss()
                 }
+                onDismiss {
+                    dialogInView = null
+                }
+                cancelable(false)
+            }
     }
 
     private fun displayInfoDialog(
-            message: String?,
-            stateMessageCallback: StateMessageCallback
+        message: String?,
+        stateMessageCallback: StateMessageCallback
     ): MaterialDialog {
         return MaterialDialog(this)
-                .show{
-                    title(R.string.text_info)
-                    message(text = message)
-                    positiveButton(R.string.text_ok){
-                        stateMessageCallback.removeMessageFromStack()
-                        dismiss()
-                    }
-                    onDismiss {
-                        dialogInView = null
-                    }
-                    cancelable(false)
+            .show{
+                title(R.string.text_info)
+                message(text = message)
+                positiveButton(R.string.text_ok){
+                    stateMessageCallback.removeMessageFromStack()
+                    dismiss()
                 }
+                onDismiss {
+                    dialogInView = null
+                }
+                cancelable(false)
+            }
     }
 
     private fun areYouSureDialog(
-            message: String,
-            callback: AreYouSureCallback,
-            stateMessageCallback: StateMessageCallback
+        message: String,
+        callback: AreYouSureCallback,
+        stateMessageCallback: StateMessageCallback
     ): MaterialDialog {
         return MaterialDialog(this)
-                .show{
-                    title(R.string.are_you_sure)
-                    message(text = message)
-                    negativeButton(R.string.text_cancel){
-                        callback.cancel()
-                        stateMessageCallback.removeMessageFromStack()
-                        dismiss()
-                    }
-                    positiveButton(R.string.text_yes){
-                        callback.proceed()
-                        stateMessageCallback.removeMessageFromStack()
-                        dismiss()
-                    }
-                    onDismiss {
-                        dialogInView = null
-                    }
-                    cancelable(false)
+            .show{
+                title(R.string.are_you_sure)
+                message(text = message)
+                negativeButton(R.string.text_cancel){
+                    callback.cancel()
+                    stateMessageCallback.removeMessageFromStack()
+                    dismiss()
                 }
+                positiveButton(R.string.text_yes){
+                    callback.proceed()
+                    stateMessageCallback.removeMessageFromStack()
+                    dismiss()
+                }
+                onDismiss {
+                    dialogInView = null
+                }
+                cancelable(false)
+            }
     }
 }

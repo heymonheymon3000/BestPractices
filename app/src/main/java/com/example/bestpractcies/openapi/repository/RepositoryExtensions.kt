@@ -18,8 +18,8 @@ import java.io.IOException
 private val TAG: String = "AppDebug"
 
 suspend fun <T> safeApiCall(
-        dispatcher: CoroutineDispatcher,
-        apiCall: suspend () -> T?
+    dispatcher: CoroutineDispatcher,
+    apiCall: suspend () -> T?
 ): ApiResult<T?> {
     return withContext(dispatcher) {
         try {
@@ -41,14 +41,14 @@ suspend fun <T> safeApiCall(
                     val code = throwable.code()
                     val errorResponse = convertErrorBody(throwable)
                     GenericError(
-                            code,
-                            errorResponse
+                        code,
+                        errorResponse
                     )
                 }
                 else -> {
                     GenericError(
-                            null,
-                            UNKNOWN_ERROR
+                        null,
+                        UNKNOWN_ERROR
                     )
                 }
             }
@@ -57,8 +57,8 @@ suspend fun <T> safeApiCall(
 }
 
 suspend fun <T> safeCacheCall(
-        dispatcher: CoroutineDispatcher,
-        cacheCall: suspend () -> T?
+    dispatcher: CoroutineDispatcher,
+    cacheCall: suspend () -> T?
 ): CacheResult<T?> {
     return withContext(dispatcher) {
         try {
@@ -81,17 +81,17 @@ suspend fun <T> safeCacheCall(
 
 
 fun <ViewState> buildError(
-        message: String,
-        uiComponentType: UIComponentType,
-        stateEvent: StateEvent?
+    message: String,
+    uiComponentType: UIComponentType,
+    stateEvent: StateEvent?
 ): DataState<ViewState>{
     return DataState.error(
-            response = Response(
-                    message = "${stateEvent?.errorInfo()}\n\nReason: ${message}",
-                    uiComponentType = uiComponentType,
-                    messageType = MessageType.Error()
-            ),
-            stateEvent = stateEvent
+        response = Response(
+            message = "${stateEvent?.errorInfo()}\n\nReason: ${message}",
+            uiComponentType = uiComponentType,
+            messageType = MessageType.Error()
+        ),
+        stateEvent = stateEvent
     )
 
 }

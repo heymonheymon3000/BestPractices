@@ -22,9 +22,9 @@ import kotlinx.coroutines.FlowPreview
 @ExperimentalCoroutinesApi
 abstract class BaseBlogFragment
 constructor(
-        @LayoutRes
-        private val layoutRes: Int,
-        private val viewModelFactory: ViewModelProvider.Factory
+    @LayoutRes
+    private val layoutRes: Int,
+    private val viewModelFactory: ViewModelProvider.Factory
 ): Fragment(layoutRes)
 {
 
@@ -48,9 +48,9 @@ constructor(
     fun setupActionBarWithNavController(fragmentId: Int, activity: AppCompatActivity){
         val appBarConfiguration = AppBarConfiguration(setOf(fragmentId))
         NavigationUI.setupActionBarWithNavController(
-                activity,
-                findNavController(),
-                appBarConfiguration
+            activity,
+            findNavController(),
+            appBarConfiguration
         )
     }
 

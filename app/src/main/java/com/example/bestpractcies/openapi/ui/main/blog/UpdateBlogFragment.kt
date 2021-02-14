@@ -42,8 +42,8 @@ import javax.inject.Inject
 class UpdateBlogFragment
 @Inject
 constructor(
-        viewModelFactory: ViewModelProvider.Factory,
-        private val requestManager: RequestManager
+    viewModelFactory: ViewModelProvider.Factory,
+    private val requestManager: RequestManager
 ): BaseBlogFragment(R.layout.fragment_update_blog, viewModelFactory)
 {
 
@@ -68,8 +68,8 @@ constructor(
         viewState?.blogFields?.blogList = ArrayList()
 
         outState.putParcelable(
-                BLOG_VIEW_STATE_BUNDLE_KEY,
-                viewState
+            BLOG_VIEW_STATE_BUNDLE_KEY,
+            viewState
         )
         super.onSaveInstanceState(outState)
     }
@@ -88,8 +88,8 @@ constructor(
 
     private fun pickFromGallery() {
         val intent = Intent(
-                Intent.ACTION_PICK,
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            Intent.ACTION_PICK,
+            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         )
         intent.type = "image/*"
         val mimeTypes = arrayOf("image/jpeg", "image/png", "image/jpg")
@@ -101,23 +101,23 @@ constructor(
     private fun launchImageCrop(uri: Uri){
         context?.let{
             CropImage.activity(uri)
-                    .setGuidelines(CropImageView.Guidelines.ON)
-                    .start(it, this)
+                .setGuidelines(CropImageView.Guidelines.ON)
+                .start(it, this)
         }
     }
 
     private fun showImageSelectionError(){
         uiCommunicationListener.onResponseReceived(
-                response = Response(
-                        message = SOMETHING_WRONG_WITH_IMAGE,
-                        uiComponentType = UIComponentType.Dialog(),
-                        messageType = MessageType.Error()
-                ),
-                stateMessageCallback = object: StateMessageCallback {
-                    override fun removeMessageFromStack() {
-                        viewModel.clearStateMessage()
-                    }
+            response = Response(
+                message = SOMETHING_WRONG_WITH_IMAGE,
+                uiComponentType = UIComponentType.Dialog(),
+                messageType = MessageType.Error()
+            ),
+            stateMessageCallback = object: StateMessageCallback{
+                override fun removeMessageFromStack() {
+                    viewModel.clearStateMessage()
                 }
+            }
         )
     }
 
@@ -138,7 +138,7 @@ constructor(
                     Log.d(TAG, "CROP: CROP_IMAGE_ACTIVITY_REQUEST_CODE")
                     val result = CropImage.getActivityResult(data)
                     val resultUri = result.uri
-                    Log.d(TAG, "CROP: CROP_IMAGE_ACTIVITY_REQUEST_CODE: uri: $resultUri")
+                    Log.d(TAG, "CROP: CROP_IMAGE_ACTIVITY_REQUEST_CODE: uri: ${resultUri}")
                     viewModel.setUpdatedUri(resultUri)
                 }
 
@@ -155,9 +155,9 @@ constructor(
         viewModel.viewState.observe(viewLifecycleOwner, Observer { viewState ->
             viewState.updatedBlogFields.let{ updatedBlogFields ->
                 setBlogProperties(
-                        updatedBlogFields.updatedBlogTitle,
-                        updatedBlogFields.updatedBlogBody,
-                        updatedBlogFields.updatedImageUri
+                    updatedBlogFields.updatedBlogTitle,
+                    updatedBlogFields.updatedBlogBody,
+                    updatedBlogFields.updatedImageUri
                 )
             }
         })
@@ -175,12 +175,12 @@ constructor(
                 }
 
                 uiCommunicationListener.onResponseReceived(
-                        response = it.response,
-                        stateMessageCallback = object: StateMessageCallback {
-                            override fun removeMessageFromStack() {
-                                viewModel.clearStateMessage()
-                            }
+                    response = it.response,
+                    stateMessageCallback = object: StateMessageCallback {
+                        override fun removeMessageFromStack() {
+                            viewModel.clearStateMessage()
                         }
+                    }
                 )
             }
         })
@@ -189,8 +189,8 @@ constructor(
     fun setBlogProperties(title: String?, body: String?, image: Uri?){
         image?.let {
             requestManager
-                    .load(it)
-                    .into(blog_image)
+                .load(it)
+                .into(blog_image)
         }
         blog_title.setText(title)
         blog_body.setText(body)
@@ -201,30 +201,30 @@ constructor(
         viewModel.getUpdatedBlogUri()?.let{ imageUri ->
             imageUri.path?.let{filePath ->
                 val imageFile = File(filePath)
-                Log.d(TAG, "UpdateBlogFragment, imageFile: file: $imageFile")
+                Log.d(TAG, "UpdateBlogFragment, imageFile: file: ${imageFile}")
                 if(imageFile.exists()){
                     val requestBody =
-                            RequestBody.create(
-                                    MediaType.parse("image/*"),
-                                    imageFile
-                            )
+                        RequestBody.create(
+                            MediaType.parse("image/*"),
+                            imageFile
+                        )
                     // name = field name in serializer
                     // filename = name of the image file
                     // requestBody = file with file type information
                     multipartBody = MultipartBody.Part.createFormData(
-                            "image",
-                            imageFile.name,
-                            requestBody
+                        "image",
+                        imageFile.name,
+                        requestBody
                     )
                 }
             }
         }
         viewModel.setStateEvent(
-                BlogStateEvent.UpdateBlogPostEvent(
-                        blog_title.text.toString(),
-                        blog_body.text.toString(),
-                        multipartBody
-                )
+            BlogStateEvent.UpdateBlogPostEvent(
+                blog_title.text.toString(),
+                blog_body.text.toString(),
+                multipartBody
+            )
         )
         uiCommunicationListener.hideSoftKeyboard()
     }
@@ -249,4 +249,7 @@ constructor(
         viewModel.setUpdatedBody(blog_body.text.toString())
     }
 }
+
+
+
 
