@@ -32,32 +32,32 @@ constructor(
         when(apiResult){
             is GenericError -> {
                 emit(
-                        buildError<ViewState>(
-                                apiResult.errorMessage?.let { it }?: UNKNOWN_ERROR,
-                                UIComponentType.Dialog(),
-                                stateEvent
-                        )
+                    buildError<ViewState>(
+                        apiResult.errorMessage?.let { it }?: UNKNOWN_ERROR,
+                        UIComponentType.Dialog(),
+                        stateEvent
+                    )
                 )
             }
 
             is NetworkError -> {
                 emit(
-                        buildError<ViewState>(
-                                NETWORK_ERROR,
-                                UIComponentType.Dialog(),
-                                stateEvent
-                        )
+                    buildError<ViewState>(
+                        NETWORK_ERROR,
+                        UIComponentType.Dialog(),
+                        stateEvent
+                    )
                 )
             }
 
             is Success -> {
                 if(apiResult.value == null){
                     emit(
-                            buildError<ViewState>(
-                                    UNKNOWN_ERROR,
-                                    UIComponentType.Dialog(),
-                                    stateEvent
-                            )
+                        buildError<ViewState>(
+                            UNKNOWN_ERROR,
+                            UIComponentType.Dialog(),
+                            stateEvent
+                        )
                     )
                 }
                 else{
