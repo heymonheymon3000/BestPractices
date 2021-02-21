@@ -103,7 +103,7 @@ constructor(
         )
     }
 
-    fun checkIsAuthorOfBlogPost(){
+    private fun checkIsAuthorOfBlogPost(){
         viewModel.setIsAuthorOfBlogPost(false) // reset
         viewModel.setStateEvent(CheckAuthorOfBlogPost())
     }
@@ -115,7 +115,7 @@ constructor(
                 setBlogProperties(blogPost)
             }
 
-            if(viewState.viewBlogFields.isAuthorOfBlogPost == true){
+            if(viewState.viewBlogFields.isAuthorOfBlogPost){
                 adaptViewToAuthorMode()
             }
         })

@@ -1,9 +1,9 @@
-import android.util.Log
 import com.example.bestpractcies.openapi.ui.main.blog.state.BlogStateEvent.*
 import com.example.bestpractcies.openapi.ui.main.blog.state.BlogViewState
 import com.example.bestpractcies.openapi.ui.main.blog.viewmodel.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import timber.log.Timber
 
 
 @FlowPreview
@@ -30,7 +30,7 @@ fun BlogViewModel.loadFirstPage() {
         setQueryExhausted(false)
         resetPage()
         setStateEvent(BlogSearchEvent())
-        Log.e(TAG, "BlogViewModel: loadFirstPage: ${viewState.value!!.blogFields.searchQuery}")
+        Timber.e("BlogViewModel: loadFirstPage: ${viewState.value!!.blogFields.searchQuery}")
     }
 }
 
@@ -49,7 +49,7 @@ fun BlogViewModel.nextPage(){
     if(!isJobAlreadyActive(BlogSearchEvent())
             && !viewState.value!!.blogFields.isQueryExhausted!!
     ){
-        Log.d(TAG, "BlogViewModel: Attempting to load next page...")
+        Timber.d("BlogViewModel: Attempting to load next page...")
         incrementPageNumber()
         setStateEvent(BlogSearchEvent())
     }

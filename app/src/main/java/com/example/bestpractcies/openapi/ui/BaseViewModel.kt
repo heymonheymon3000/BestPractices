@@ -1,17 +1,16 @@
 package com.example.bestpractcies.openapi.ui
 
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.bestpractcies.openapi.util.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import timber.log.Timber
 
 
 @FlowPreview
 @ExperimentalCoroutinesApi
 abstract class BaseViewModel<ViewState> : ViewModel()
 {
-    val TAG: String = "AppDebug"
 
     private val _viewState: MutableLiveData<ViewState> = MutableLiveData()
 
@@ -57,7 +56,7 @@ abstract class BaseViewModel<ViewState> : ViewModel()
     }
 
     fun isJobAlreadyActive(stateEvent: StateEvent): Boolean {
-        Log.d(TAG, "isJobAlreadyActive?: ${dataChannelManager.isJobAlreadyActive(stateEvent)} ")
+        Timber.d("isJobAlreadyActive?: ${dataChannelManager.isJobAlreadyActive(stateEvent)} ")
         return dataChannelManager.isJobAlreadyActive(stateEvent)
     }
 
@@ -78,7 +77,7 @@ abstract class BaseViewModel<ViewState> : ViewModel()
 
     open fun cancelActiveJobs(){
         if(areAnyJobsActive()){
-            Log.d(TAG, "cancel active jobs: ${dataChannelManager.numActiveJobs.value ?: 0}")
+            Timber.d("cancel active jobs: ${dataChannelManager.numActiveJobs.value ?: 0}")
             dataChannelManager.cancelJobs()
         }
     }

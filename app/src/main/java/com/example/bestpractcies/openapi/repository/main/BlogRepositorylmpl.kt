@@ -1,6 +1,6 @@
 package com.example.bestpractcies.openapi.repository.main
 
-import android.util.Log
+import android.annotation.SuppressLint
 import com.example.bestpractcies.openapi.api.GenericResponse
 import com.example.bestpractcies.openapi.api.main.OpenApiMainService
 import com.example.bestpractcies.openapi.api.main.network.responses.BlogCreateUpdateResponse
@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import timber.log.Timber
 import javax.inject.Inject
 
 @FlowPreview
@@ -39,8 +40,6 @@ constructor(
     val sessionManager: SessionManager
 ): BlogRepository
 {
-
-    private val TAG: String = "AppDebug"
     override fun searchBlogPosts(
         authToken: AuthToken,
         query: String,
@@ -67,6 +66,7 @@ constructor(
                 )
             }
         ){
+            @SuppressLint("BinaryOperationInTimber")
             override suspend fun updateCache(networkObject: BlogListSearchResponse) {
                 val blogPostList = networkObject.toList()
                 withContext(IO) {
@@ -74,11 +74,11 @@ constructor(
                         try{
                             // Launch each insert as a separate job to be executed in parallel
                             launch {
-                                Log.d(TAG, "updateLocalDb: inserting blog: ${blogPost}")
+                                Timber.d("updateLocalDb: inserting blog: $blogPost")
                                 blogPostDao.insert(blogPost)
                             }
                         }catch (e: Exception){
-                            Log.e(TAG, "updateLocalDb: error updating cache data on blog post with slug: ${blogPost.slug}. " +
+                            Timber.e("updateLocalDb: error updating cache data on blog post with slug: ${blogPost.slug}. " +
                                     "${e.message}")
                             // Could send an error report here or something but I don't think you should throw an error to the UI
                             // Since there could be many blog posts being inserted/updated.
@@ -256,8 +256,5 @@ constructor(
             }.getResult()
         )
     }
-
-
-
 }
 

@@ -2,7 +2,6 @@ package com.example.bestpractcies.openapi.ui.main
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -25,6 +24,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -57,6 +57,30 @@ class MainActivity : BaseActivity(),
                 this)
     }
 
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        inject()
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        setupActionBar()
+        setupBottomNavigationView(savedInstanceState)
+
+        restoreSession(savedInstanceState)
+        subscribeObservers()
+    }
+
+    fun subscribeObservers(){
+
+        sessionManager.cachedToken.observe(this, Observer{ authToken ->
+            Timber.d("MainActivity, subscribeObservers: ViewState: $authToken")
+            if(authToken == null || authToken.account_pk == -1 || authToken.token == null){
+                navAuthActivity()
+                finish()
+            }
+        })
+    }
+
     override fun onGraphChange() {
         expandAppBar()
     }
@@ -65,7 +89,7 @@ class MainActivity : BaseActivity(),
             navController: NavController,
             fragment: Fragment
     ){
-        Log.d(TAG, "logInfo: onReSelectItem")
+        Timber.d("logInfo: onReSelectItem")
         when(fragment){
 
             is ViewBlogFragment -> {
@@ -103,17 +127,6 @@ class MainActivity : BaseActivity(),
                 .inject(this)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        inject()
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        setupActionBar()
-        setupBottomNavigationView(savedInstanceState)
-
-        restoreSession(savedInstanceState)
-        subscribeObservers()
-    }
 
     private fun setupBottomNavigationView(savedInstanceState: Bundle?){
         bottomNavigationView = findViewById(R.id.bottom_navigation_view)
@@ -133,7 +146,7 @@ class MainActivity : BaseActivity(),
 
     private fun restoreSession(savedInstanceState: Bundle?){
         savedInstanceState?.get(AUTH_TOKEN_BUNDLE_KEY)?.let{ authToken ->
-            Log.d(TAG, "restoreSession: Restoring token: $authToken")
+            Timber.d("restoreSession: Restoring token: $authToken")
             sessionManager.setValue(authToken as AuthToken)
         }
     }
@@ -148,16 +161,7 @@ class MainActivity : BaseActivity(),
         outState.putIntArray(BOTTOM_NAV_BACKSTACK_KEY, bottomNavController.navigationBackStack.toIntArray())
     }
 
-    fun subscribeObservers(){
 
-        sessionManager.cachedToken.observe(this, Observer{ authToken ->
-            Log.d(TAG, "MainActivity, subscribeObservers: ViewState: $authToken")
-            if(authToken == null || authToken.account_pk == -1 || authToken.token == null){
-                navAuthActivity()
-                finish()
-            }
-        })
-    }
 
     override fun expandAppBar() {
         findViewById<AppBarLayout>(R.id.app_bar).setExpanded(true)

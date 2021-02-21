@@ -9,13 +9,12 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import timber.log.Timber
 
 
 @FlowPreview
 @ExperimentalCoroutinesApi
 abstract class DataChannelManager<ViewState> {
-
-    private val TAG: String = "AppDebug"
 
     private val _activeStateEvents: HashSet<String> = HashSet()
     private val _numActiveJobs: MutableLiveData<Int> = MutableLiveData()
@@ -27,6 +26,7 @@ abstract class DataChannelManager<ViewState> {
         get() = _numActiveJobs
 
     fun setupChannel(){
+        Timber.i("setupChannel called!!!")
         cancelJobs()
         setupNewChannelScope(CoroutineScope(IO))
     }
@@ -92,7 +92,7 @@ abstract class DataChannelManager<ViewState> {
         return _activeStateEvents.contains(stateEvent.toString())
     }
 
-    fun getChannelScope(): CoroutineScope {
+    private fun getChannelScope(): CoroutineScope {
         return channelScope?: setupNewChannelScope(CoroutineScope(IO))
     }
 

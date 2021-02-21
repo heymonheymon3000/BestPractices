@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import timber.log.Timber
 import javax.inject.Inject
 
 @FlowPreview
@@ -48,7 +49,7 @@ constructor(
 
         ){
             override suspend fun updateCache(networkObject: AccountProperties) {
-                Log.d(TAG, "updateCache: ${networkObject} ")
+                Timber.d("updateCache: $networkObject ")
                 accountPropertiesDao.updateAccountProperties(
                         networkObject.pk,
                         networkObject.email,

@@ -19,6 +19,7 @@ import com.example.bestpractcies.openapi.util.SuccessHandling.Companion.RESPONSE
 import kotlinx.android.synthetic.main.activity_auth.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import timber.log.Timber
 import javax.inject.Inject
 
 @FlowPreview
@@ -73,7 +74,7 @@ class AuthActivity : BaseActivity()
     private fun subscribeObservers(){
 
         viewModel.viewState.observe(this, Observer{ viewState ->
-            Log.d(TAG, "AuthActivity, subscribeObservers: AuthViewState: $viewState")
+            Timber.d("AuthActivity, subscribeObservers: AuthViewState: $viewState")
             viewState.authToken?.let{
                 sessionManager.login(it)
             }

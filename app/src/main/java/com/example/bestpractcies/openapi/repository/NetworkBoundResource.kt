@@ -20,8 +20,6 @@ constructor(
 )
 {
 
-    private val TAG: String = "AppDebug"
-
     val result: Flow<DataState<ViewState>> = flow {
 
         // ****** STEP 1: VIEW CACHE ******

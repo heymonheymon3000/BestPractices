@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -19,13 +18,13 @@ import com.example.bestpractcies.openapi.util.MessageType
 import com.example.bestpractcies.openapi.util.Response
 import com.example.bestpractcies.openapi.util.StateMessageCallback
 import com.example.bestpractcies.openapi.util.UIComponentType
+import timber.log.Timber
 import javax.inject.Inject
 
 abstract class BaseActivity: AppCompatActivity(),
     UICommunicationListener
 {
 
-    val TAG: String = "AppDebug"
 
     private var dialogInView: MaterialDialog? = null
 
@@ -77,7 +76,7 @@ abstract class BaseActivity: AppCompatActivity(),
             is UIComponentType.None -> {
                 // This would be a good place to send to your Error Reporting
                 // software of choice (ex: Firebase crash reporting)
-                Log.i(TAG, "onResponseReceived: ${response.message}")
+                Timber.i("onResponseReceived: ${response.message}")
                 stateMessageCallback.removeMessageFromStack()
             }
         }
@@ -87,7 +86,7 @@ abstract class BaseActivity: AppCompatActivity(),
         response: Response,
         stateMessageCallback: StateMessageCallback
     ){
-        Log.d(TAG, "displayDialog: ")
+        Timber.d("displayDialog: ")
         response.message?.let { message ->
 
             dialogInView = when (response.messageType) {

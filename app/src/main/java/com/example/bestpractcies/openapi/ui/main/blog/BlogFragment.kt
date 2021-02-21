@@ -42,6 +42,7 @@ import kotlinx.coroutines.FlowPreview
 import loadFirstPage
 import nextPage
 import refreshFromCache
+import timber.log.Timber
 import javax.inject.Inject
 
 @FlowPreview
@@ -65,9 +66,9 @@ constructor(
         // Restore state after process death
 
         savedInstanceState?.let { inState ->
-            Log.d(TAG, "BlogViewState: inState is NOT null")
+            Timber.d("BlogViewState: inState is NOT null")
             (inState[BLOG_VIEW_STATE_BUNDLE_KEY] as BlogViewState?)?.let { viewState ->
-                Log.d(TAG, "BlogViewState: restoring view state: ${viewState}")
+                Timber.d("BlogViewState: restoring view state: $viewState")
                 viewModel.setViewState(viewState)
             }
         }
@@ -179,7 +180,7 @@ constructor(
             if (actionId == EditorInfo.IME_ACTION_UNSPECIFIED
                 || actionId == EditorInfo.IME_ACTION_SEARCH ) {
                 val searchQuery = v.text.toString()
-                Log.e(TAG, "SearchView: (keyboard or arrow) executing search...: ${searchQuery}")
+                Timber.e("SearchView: (keyboard or arrow) executing search...: ${searchQuery}")
                 viewModel.setQuery(searchQuery).let{
                     onBlogSearchOrFilter()
                 }
@@ -191,7 +192,7 @@ constructor(
         val searchButton = searchView.findViewById(R.id.search_go_btn) as View
         searchButton.setOnClickListener {
             val searchQuery = searchPlate.text.toString()
-            Log.e(TAG, "SearchView: (button) executing search...: ${searchQuery}")
+            Timber.e("SearchView: (button) executing search...: ${searchQuery}")
             viewModel.setQuery(searchQuery).let {
                 onBlogSearchOrFilter()
             }
@@ -230,7 +231,7 @@ constructor(
                     val layoutManager = recyclerView.layoutManager as LinearLayoutManager
                     val lastPosition = layoutManager.findLastVisibleItemPosition()
                     if (lastPosition == recyclerAdapter.itemCount.minus(1)) {
-                        Log.d(TAG, "BlogFragment: attempting to load next page...")
+                        Timber.d("BlogFragment: attempting to load next page...")
                         viewModel.nextPage()
                     }
                 }
@@ -290,7 +291,7 @@ constructor(
         swipe_refresh.isRefreshing = false
     }
 
-    fun showFilterDialog(){
+    private fun showFilterDialog(){
 
         activity?.let {
             val dialog = MaterialDialog(it)
@@ -317,7 +318,7 @@ constructor(
             }
 
             view.findViewById<TextView>(R.id.positive_button).setOnClickListener {
-                Log.d(TAG, "FilterDialog: apply filter.")
+                Timber.d("FilterDialog: apply filter.")
 
                 val newFilter =
                     when (view.findViewById<RadioGroup>(R.id.filter_group).checkedRadioButtonId) {
@@ -344,7 +345,7 @@ constructor(
             }
 
             view.findViewById<TextView>(R.id.negative_button).setOnClickListener {
-                Log.d(TAG, "FilterDialog: cancelling filter.")
+                Timber.d("FilterDialog: cancelling filter.")
                 dialog.dismiss()
             }
 

@@ -159,6 +159,8 @@ constructor(
                         }
                     }
                 }
+
+                // listens for emits.  The emit will not start pouring in until onEach is called on the flow
                 launchJob(stateEvent, job)
             }
         }
